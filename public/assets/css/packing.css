@@ -1,0 +1,190 @@
+
+/* Warna Latar Belakang Utama */
+body {
+    background-color: #1d1d1d; /* Hitam pekat untuk kesan modern */
+    color: #e0e0e0;
+    font-family: Arial, sans-serif;
+    font-size: 1.2vw; /* Ukuran font responsif untuk layar besar */
+    margin: 0;
+    padding: 0;
+}
+
+.navbar {
+    background-color: #2c3e50; /* Biru tua */
+    color: #ecf0f1; /* Abu terang */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Card Styling */
+.card {
+    background-color: #34495e; /* Biru gelap untuk card */
+    color: #ffffff;
+    border: 1px solid #2c3e50;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Warna Tabel Header */
+.table th {
+    background-color: #3498db; /* Biru untuk tombol utama */
+    color: #ffffff;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+/* Warna Baris Tabel */
+.table td {
+    background-color: #333333; /* Abu-abu gelap untuk baris tabel */
+    color: #e0e0e0;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #424242; /* Abu-abu lebih terang untuk striping */
+}
+
+img {
+    max-width: 100%; /* Gambar tidak melebihi lebar kontainer */
+    height: auto; /* Menjaga aspek rasio */
+}
+
+/* Media query untuk layar besar (1920x1080 - TV 32 inch) */
+@media (min-width: 1366px) and (max-width: 1920px) {
+    body {
+        font-size: 1.1vw;
+    }
+    .container {
+        width: 90%;
+        margin: auto;
+    }
+    img {
+        width: 90%;
+        height: auto;
+    }
+}
+
+/* Media query untuk layar Ultra HD (4K - TV 52 inch) */
+@media (min-width: 3840px) {
+    body {
+        font-size: 0.9vw; /* Sesuaikan ukuran font agar tidak terlalu besar */
+    }
+    .container {
+        width: 80%;
+        margin: auto;
+    }
+    img {
+        width: 80%;
+        height: auto;
+    }
+}
+
+/* Responsif untuk semua layar */
+.font-class {
+    font-size: 1.2vw;
+}
+
+.container {
+    max-width: 1920px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.item {
+    flex: 1 1 30%; /* Menyesuaikan berdasarkan ruang yang tersedia */
+    margin: 10px;
+}
+
+    body {
+        font-size: 1rem;
+        /* Ukuran dasar */
+    }
+
+    .header {
+        font-size: 1.5rem;
+        /* Skala font untuk judul */
+    }
+
+
+    .table th {
+        text-align: center;
+        /* Center text in header */
+    }
+
+    .table td {
+        text-align: left;
+    }
+
+    /* meratakan ke kanan untuk kolom tertentu, gunakan kelas tambahan */
+    .table td.right-align {
+        text-align: right;
+    }
+
+    .table tr {
+        transition: background-color 0.3s;
+        /* Menambahkan transisi untuk baris */
+    }
+
+    .table td {
+        /* Warna teks body */
+        font-weight: bold;
+        text-transform: uppercase;
+        /* Mengubah teks body menjadi huruf kapital */
+    }
+
+    .colom {
+        color: red;
+        font-weight: bold;
+    }
+
+
+    tbody tr td,
+    tbody tr th {
+        padding: 1px;
+    }
+
+    table {
+        border-collapse: collapse;
+        /* Removes gaps between cells */
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 1px;
+        /* Adjust as needed, 0 for no padding */
+        border: 1px solid #000;
+        /* Ensure borders are defined */
+        font-size: 1em;
+    }
+
+    .table-inner-outer {
+        margin: 0;
+        /* Remove any margins if there are */
+        padding: 0;
+        /* Remove padding */
+    }
+
+    /* Gaya untuk tabel striping */
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f2f2f2;
+        /* Warna striping */
+    }
+
+    .animated-image {
+        max-width: 100%;
+        /* Agar gambar tidak lebih besar dari kontainer */
+        height: auto;
+        /* Agar proporsi gambar tetap */
+    }
+
+    img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
