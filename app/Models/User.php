@@ -17,10 +17,12 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+    protected $table = 'tbl_users';
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role_id',
     ];
 
     /**
@@ -41,4 +43,15 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    // foreign key
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+    
+    public function submission()
+    {
+        return $this->hasMany(Submission::class, 'id_user');
+    }
 }

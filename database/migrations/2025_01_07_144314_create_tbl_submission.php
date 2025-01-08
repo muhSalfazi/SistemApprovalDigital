@@ -13,15 +13,20 @@ return new class extends Migration
     {
         Schema::create('tbl_submission', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_devisi');
+            $table->unsignedBigInteger('id_departement');
             $table->unsignedBigInteger('id_kategori');
-            $table->unsignedBigInteger('id_prepared');
+            $table->unsignedBigInteger('id_user');
             $table->string('title');
             $table->string('no_transaksi');
             $table->string('remark');
             $table->string('lampiran_pdf');
-            $table->datetime('tgl_pengajuan'); 
-            
+            $table->datetime('tgl_pengajuan');
+
+            // foreign key
+            $table->foreign('id_departement')->references('id')->on('tbl_departement')->onDelete('cascade');
+            $table->foreign('id_kategori')->references('id')->on('tbl_kategori')->onDelete('cascade');
+            $table->foreign('id_user')->references('id')->on('tbl_users')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

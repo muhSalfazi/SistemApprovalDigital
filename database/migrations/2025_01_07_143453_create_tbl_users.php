@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->unsignedBigInteger('role_id');
-            $table->datetime('last_login');
+            $table->datetime('last_login')->nullable();
             $table->timestamps();
 
             // fk
