@@ -1,105 +1,37 @@
-<style>
-
-</style>
 <aside id="sidebar" class="sidebar hiden">
     <ul class="sidebar-nav" id="sidebar-nav">
-        @if (Auth::check() && in_array(Auth::user()->role, ['admin', 'superAdmin']))
-            <li class="sidebar-item">
-                <a class="nav-link {{ request()->routeIs('dashboard', 'report.closed', 'report.delay') ? 'active' : 'collapsed' }}"
-                    href="{{ route('dashboard') }}">
-                    <span>
-                        <i class="bi bi-columns-gap"></i>
-                    </span>
-                    <span class="hide-menu">Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-heading">Master</li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('parts.index', 'parts.create', 'parts.edit') ? 'active' : 'collapsed' }}"
-                    href="{{ route('parts.index') }}">
-                    <i class="bi bi-box-seam-fill"></i>
-                    <span>Part</span>
-                </a>
-            </li>
-            <li class="nav-heading">Order & Packing Management</li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('orders.index', 'orders.create') ? 'active' : 'collapsed' }}"
-                    href="{{ route('orders.index') }}">
-                    <i class="bi bi-cart4"></i>
-                    <span>Order</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.delivery') ? 'active' : 'collapsed' }}"
-                    href="{{ route('admin.delivery') }}">
-                    <i class="bi bi-truck"></i>
-                    <span>Delivery</span>
-                </a>
-            </li>
-            @if (Auth::check() && Auth::user()->role == 'superAdmin')
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.packing') ? 'active' : 'collapsed' }}"
-                    href="{{ route('admin.packing') }}">
-                    <i class="fas fa-box-open me-2"></i>
-                    <span>Prepared</span>
-                </a>
-            </li>
-            <li class="nav-heading">User Management</li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('users.index', 'users.create') ? 'active' : 'collapsed' }}"
-                    href="{{ route('users.index') }}">
-                    <i class="bi bi-people-fill"></i>
-                    <span>User</span>
-                </a>
-            </li>
-        @endif
-            <li class="nav-heading">Auth</li>
-            <li class="nav-item">
-                <form id="logout-form" action="{{ route('logout-admin') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-                <a class="nav-link collapsed" href="#" onclick="logoutConfirm()">
-                    <i class="bi bi-box-arrow-left"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
-        @endif
-        @if (Auth::check() && Auth::user()->role == 'viewer')
-            <li class="sidebar-item">
-                <a class="nav-link {{ request()->routeIs('dashboard.viewer', 'report.closed', 'report.delay') ? 'active' : 'collapsed' }}"
-                    href="{{ route('dashboard.viewer') }}">
-                    <span>
-                        <i class="bi bi-columns-gap"></i>
-                    </span>
-                    <span class="hide-menu">Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-heading">Order & Packing Management</li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('orders.index.viewer') ? 'active' : 'collapsed' }}"
-                    href="{{ route('orders.index.viewer') }}">
-                    <i class="bi bi-cart4"></i>
-                    <span>Order</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('viewer.delivery') ? 'active' : 'collapsed' }}"
-                    href="{{ route('viewer.delivery') }}">
-                    <i class="bi bi-truck"></i>
-                    <span>Delivery</span>
-                </a>
-            </li>
-            <li class="nav-heading">Auth</li>
-            <li class="nav-item">
-                <form id="logout-form" action="{{ route('logout-viewer') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-                <a class="nav-link collapsed" href="#" onclick="logoutConfirm()">
-                    <i class="bi bi-box-arrow-left"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
-        @endif
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('submissions.index', 'submissions.create') ? 'active' : 'collapsed' }}"
+                href="{{ route('submissions.index') }}">
+                <i class="fas fa-file-alt"></i>
+                <span>Submission</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('kategori.index') ? 'active' : 'collapsed' }}"
+                href="{{ route('kategori.index') }}">
+                <i class="bi-folder"></i>
+                <span>Kategori</span>
+            </a>
+        </li>
+        <li class="nav-heading">User Management</li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('users.index', 'users.create') ? 'active' : 'collapsed' }}"
+                href="{{ route('users.index') }}">
+                <i class="bi bi-people-fill"></i>
+                <span>User</span>
+            </a>
+        </li>
+        <li class="nav-heading">Auth</li>
+        <li class="nav-item">
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
+            <a class="nav-link collapsed" href="#" onclick="logoutConfirm()">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
+            </a>
+        </li>
     </ul>
 </aside>
 <!-- End Sidebar-->

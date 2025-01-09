@@ -12,7 +12,7 @@ class Kategori extends Model
     protected $table = 'tbl_kategori';
 
     protected $fillable = [
-        'kategori_name',
+        'nama_kategori',
     ];
 
     public function submission()
@@ -20,6 +20,6 @@ class Kategori extends Model
         return $this->hasMany(Submission::class, 'id_kategori');
     }
 
-    
+
 
 }

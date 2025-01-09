@@ -20,7 +20,6 @@ class Submission extends Model
         'no_transaksi',
         'remark',
         'lampiran_pdf',
-        'tgl_pengajuan',
     ];
 
     // foreign key

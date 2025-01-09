@@ -120,7 +120,7 @@
     setInterval(updateClock, 1000); // Update setiap detik
     updateClock(); // Inisialisasi
 </script>
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function() {
         const toggleButton = document.querySelector('.toggle-sidebar-btn');
         const sidebar = document.querySelector('.sidebar');
@@ -130,4 +130,4 @@
             body.classList.toggle('sidebar-collapsed');
         });
     });
-</script>
+</script> --}}

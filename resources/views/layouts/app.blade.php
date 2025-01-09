@@ -19,10 +19,6 @@
         href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
         rel="stylesheet">
 
-    @vite([
-        'resources/assets/css/style.css',
-         'resources/assets/vendor/bootstrap/css/bootstrap.min.css'
-         ])
 
     <!-- Vendor CSS Files -->
     <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -47,58 +43,6 @@
 </head>
 <style>
     /* Header tetap di atas */
-    .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        z-index: 500;
-    }
-
-    /* Sidebar */
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 60px;
-        width: 300px;
-        height: 150vh;
-        transition: transform 0.3s ease;
-        z-index: 400;
-        /* Lebih rendah dari header */
-    }
-
-    /* Sidebar tersembunyi */
-    .toggle-sidebar .sidebar {
-        transform: translateX(-100%);
-    }
-
-    /* Konten utama bergeser ketika sidebar terbuka */
-    .main-content {
-        margin-top: 60px;
-        /* Pastikan konten turun sesuai tinggi header */
-        margin-left: 0;
-        transition: margin-left 0.3s ease;
-    }
-
-    body.sidebar-expanded .main-content {
-        margin-left: 250px;
-        /* Bergeser ketika sidebar terbuka */
-    }
-
-    .toggle-sidebar .sidebar {
-        transform: translateX(-100%);
-        /* Sidebar keluar layar */
-    }
-
-    body.toggle-sidebar {
-        margin-left: 0;
-        /* Konten tetap di posisi awal */
-    }
-
-    body.sidebar-expanded {
-        margin-left: 250px;
-        /* Konten bergeser saat sidebar terbuka */
-    }
 
     /* Custom untuk layar besar */
     @media (min-width: 1920px) {
@@ -172,7 +116,7 @@
     }
 
     .table th {
-        background-color: #f97b61;
+        background-color: #fc5e5e;
         /* Warna gelap untuk header */
         color: white;
         /* Warna teks header */
@@ -449,7 +393,8 @@
     });
 </script>
 
-<body class="toggle-sidebar">
+<body>
+    {{-- jika ingin di hiden dulu sidebar nya class="toggle-sidebar" --}}
     <!-- Loader -->
     <div class="loading">
         <svg class="pl" width="240" height="240" viewBox="0 0 240 240">
@@ -487,33 +432,8 @@
     <!-- JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 
-
-    <script>
-        function confirmDelete(partId) {
-            Swal.fire({
-                title: 'Apakah Anda yakin?',
-                text: "Data ini akan dihapus secara permanen!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal',
-                width: '50%', // Atur lebar
-                showClass: {
-                    popup: 'animate__animated animate__fadeInDown' // Animasi saat muncul
-                },
-                hideClass: {
-                    popup: 'animate__animated animate__fadeOutUp' // Animasi saat menghilang
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('delete-form-' + partId).submit();
-                }
-            });
-        }
-    </script>
     <script>
         function confirmDelete(userId) {
             Swal.fire({
@@ -540,18 +460,6 @@
             });
         }
     </script>
-
-    <script>
-        setInterval(function() {
-            fetch('/keep-session-alive').then(response => {
-                if (response.ok) {
-                    console.log('Session refreshed');
-                }
-            });
-        }, 600000); // Refresh setiap 10 menit (600000 ms)
-    </script>
-
-
 
 </body>
 

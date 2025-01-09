@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Ambil semua role berdasarkan nama
-        $roles = Role::whereIn('name', ['superadmin', 'admin', 'prepared', 'approver'])->get();
+        $roles = Role::all();
 
         // Data user untuk setiap role
         $users = [
@@ -29,20 +29,32 @@ class UserSeeder extends Seeder
                 'name' => 'Admin User',
                 'email' => 'admin@mail.com',
                 'password' => Hash::make('password123'),
-                'role' => 'admin',
-            ],
-            [
-                'name' => 'Prepared User',
-                'email' => 'prepared@mail.com',
-                'password' => Hash::make('password123'),
                 'role' => 'prepared',
             ],
             [
-                'name' => 'Approver User',
-                'email' => 'approver@mail.com',
+                'name' => 'Check1 User',
+                'email' => 'Check1@mail.com',
                 'password' => Hash::make('password123'),
-                'role' => 'approver',
+                'role' => 'Check1',
             ],
+            [
+                'name' => 'Check2 User',
+                'email' => 'Check2@mail.com',
+                'password' => Hash::make('password123'),
+                'role' => 'Check2',
+            ],
+            [
+                'name' => 'Approved User',
+                'email' => 'Approved@mail.com',
+                'password' => Hash::make('password123'),
+                'role' => 'Approved',
+            ],
+            [
+                'name' => 'Viewer User',
+                'email' => 'viewer@mail.com',
+                'password' => Hash::make('password123'),
+                'role' => 'viewer',
+            ]
         ];
 
         // Loop untuk membuat user berdasarkan role

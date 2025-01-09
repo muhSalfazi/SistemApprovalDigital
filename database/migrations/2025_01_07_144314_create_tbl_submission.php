@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('no_transaksi');
             $table->string('remark');
             $table->string('lampiran_pdf');
-            $table->datetime('tgl_pengajuan');
 
             // foreign key
             $table->foreign('id_departement')->references('id')->on('tbl_departement')->onDelete('cascade');

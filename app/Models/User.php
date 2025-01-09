@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'last_login'
     ];
 
     /**
@@ -49,7 +50,7 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class, 'role_id');
     }
-    
+
     public function submission()
     {
         return $this->hasMany(Submission::class, 'id_user');
