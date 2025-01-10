@@ -44,19 +44,27 @@
                                 <th>Attachment</th>
                                 <th>Prepare</th>
                                 <th>Date Submission</th>
-                                <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($submissions as $submission)
-                                <tr>
+                            @forelse ($submissions as $submission)
+                            @if (
+                                !$submission->approvals->last() || // Submission belum memiliki approval
+                                (
+                                    $submission->approvals->last()->status === 'approved' && // Status sudah disetujui
+                                    (
+                                        $submission->approvals->last()->user->role->name === 'Check1' || // Disetujui oleh Check1
+                                        $submission->approvals->last()->user->role->name === 'Check2'    // Disetujui oleh Check2
+                                    )
+                                )
+                            )
+
+                            <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $submission->Departement->nama_departement }}</td>
+                                    <td>{{ $submission->departement->nama_departement ?? 'Unknown' }}</td>
                                     <td>{{ $submission->no_transaksi }}</td>
                                     <td>{{ $submission->title }}</td>
                                     <td>{{ $submission->remark }}</td>
-                                    {{-- <td>{{ $submission->user->name }}</td> --}}
                                     <td>
                                         <button class="btn btn-info btn-sm"
                                             onclick="openApprovalModal({{ $submission->id }}, '{{ asset($submission->lampiran_pdf) }}')">
@@ -65,36 +73,19 @@
                                     </td>
                                     <td>{{ $submission->user->name }}</td>
                                     <td>{{ \Carbon\Carbon::parse($submission->created_at)->format('d M Y H:i:s') }}</td>
-                                    <td>
-                                        @if (auth()->user()->role === 'prepared')
-                                            <button class="btn btn-primary btn-sm">Edit</button>
-                                        @elseif (auth()->user()->role === 'Check 1' && $submission->approvals->where('status', 'approved')->count() === 1)
-                                            <button class="btn btn-warning btn-sm">Approve</button>
-                                        @elseif (auth()->user()->role === 'Check 2' && $submission->approvals->where('status', 'approved')->count() === 2)
-                                            <button class="btn btn-success btn-sm">Finalize</button>
-                                        @else
-                                            <span class="badge bg-secondary">Tidak Ada Aksi</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if ($submission->lampiran_pdf)
-                                            <a href="{{ route('submissions.download', $submission->id) }}"
-                                                class="btn btn-success btn-sm">Download</a>
-                                        @else
-                                            N/A
-                                        @endif
-                                        {{-- <form action="#" method="POST" style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                        </form> --}}
-                                    </td>
                                 </tr>
-                            @endforeach
+                                @else
+                                <tr>
+                                    <td colspan="8" class="text-center">No submissions available.</td>
+                                </tr>
+                                @endif
+                            @empty
+
+                            @endforelse
                         </tbody>
+
                     </table>
-                    <div class="table-responsive">
-                    </div>
+
                 </div>
 
                 <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel"

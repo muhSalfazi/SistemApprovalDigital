@@ -19,8 +19,3 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
-<Directory "/http://127.0.0.1:8000/public/submissions">
-    AllowOverride None
-    Require all granted
-</Directory>
-

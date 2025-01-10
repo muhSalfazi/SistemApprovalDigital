@@ -46,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/approv', [SubmissionController::class, 'index'])->name('submissions.index');
     Route::get('submissions/create', [SubmissionController::class, 'create'])->name('submissions.create');
-    Route::post('submissions', [SubmissionController::class, 'store'])->name('submissions.store');
+    Route::post('submission', [SubmissionController::class, 'store'])->name('submissions.store');
     Route::get('submissions/{submission}/edit', [SubmissionController::class, 'edit'])->name('submissions.edit');
     Route::put('submissions/{submission}', [SubmissionController::class, 'update'])->name('submissions.update');
     Route::delete('submissions/{submission}', [SubmissionController::class, 'destroy'])->name('submissions.destroy');

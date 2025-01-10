@@ -17,10 +17,12 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->unsignedBigInteger('role_id');
+            $table->unsignedBigInteger('id_departement');
             $table->datetime('last_login')->nullable();
             $table->timestamps();
 
             // fk
+            $table->foreign('id_departement')->references('id')->on('tbl_departement');
             $table->foreign('role_id')->references('id')->on('tbl_roles');
         });
     }

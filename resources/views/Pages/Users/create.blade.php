@@ -49,17 +49,32 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-6">
                         <label for="role" class="form-label">Role</label>
                         <select name="role" id="role" class="form-select  mb-3 @error('role') is-invalid @enderror"
                             required>
                             <option value="" disabled selected>Pilih Role</option>
-                            <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="prepared" {{ old('role') == 'prepared' ? 'selected' : '' }}>Prepared</option>
-                            <option value="approver" {{ old('role') == 'approver' ? 'selected' : '' }}>approver</option>
+                            <option value="prepared" {{ old('role') == 'prepared' ? 'selected' : '' }}>prepared</option>
+                            <option value="Check1" {{ old('role') == 'Check1' ? 'selected' : '' }}>Check1</option>
+                            <option value="Check2" {{ old('role') == 'Check1' ? 'selected' : '' }}>Check2</option>
+                            <option value="Approved" {{ old('role') == 'Approved' ? 'selected' : '' }}>Approved</option>
                             <option value="viewer" {{ old('role') == 'viewer' ? 'selected' : '' }}>Viewer</option>
                         </select>
                         @error('role')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label for="role" class="form-label">Departement</label>
+                        <select name="departement" id="departement"
+                            class="form-select  mb-3 @error('departement') is-invalid @enderror" required>
+                            <option value="" disabled selected>Pilih Departement</option>
+                            <option value="HRGA" {{ old('departement') == 'HRGA' ? 'selected' : '' }}>HRGA</option>
+                            <option value="FAS" {{ old('departement') == 'FAS' ? 'selected' : '' }}>FAS</option>
+                            <option value="PPIC" {{ old('departement') == 'PPIC' ? 'selected' : '' }}>PPIC</option>
+                            <option value="ALL" {{ old('departement') == 'ALL' ? 'selected' : '' }}>ALL</option>
+                        </select>
+                        @error('departement')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

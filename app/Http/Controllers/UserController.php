@@ -42,7 +42,8 @@ class UserController extends Controller
             'name' => 'nullable|string|max:20|unique:tbl_users,name',
             'email' => 'nullable|string|max:20|unique:tbl_users,email',
             'password' => 'nullable|string|min:8',
-            'role' => 'required|in:admin,prepared,approver,viewer',
+            'role' => 'required|in:prepared,Check1,Check2,Approved,viewer',
+            'departement' => 'required|in:HRGA,FAS,PPIC,ALL',
         ]);
 
         // Simpan user ke database
@@ -50,7 +51,8 @@ class UserController extends Controller
         $user->name = $request->name;
         $user->email = $request->email ?? null;
         $user->password = $request->password ? Hash::make($request->password) : null;
-        $user->role_id = $this->getRoleId($request->role); // Get role ID
+        $user->role_id = $this->getRoleId($request->role);
+        $user->id_departement = $this->getDepartementID($request->departement);
         $user->save();
 
         return redirect()->route('users.index')->with('success', 'User berhasil dibuat.');
@@ -62,6 +64,10 @@ class UserController extends Controller
     private function getRoleId($roleName)
     {
         return \App\Models\Role::where('name', $roleName)->value('id');
+    }
+    private function getDepartementID($departement_name)
+    {
+        return \App\Models\Departement::where('nama_departement', $departement_name)->value('id');
     }
 
     /**

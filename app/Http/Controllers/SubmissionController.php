@@ -44,19 +44,19 @@ class SubmissionController extends Controller
             \Log::error('Error generating transaction number:', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Unable to generate transaction number.'], 500);
         }
-
-
     }
     //view
     public function create()
     {
+        // Ambil data departemen kecuali yang bernama 'ALL'
+        $departements = Departement::where('nama_departement', '!=', 'ALL')->get();
 
-        // Ambil data departemen dan kategori untuk dropdown
-        $departements = Departement::all();
+        // Ambil semua data kategori
         $categories = Kategori::all();
 
         return view('Pages.Approval.create', compact('departements', 'categories'));
     }
+
     // Simpan submission
     public function store(Request $request)
     {
@@ -66,9 +66,9 @@ class SubmissionController extends Controller
             'id_kategori' => 'required|exists:tbl_kategori,id',
             'id_user' => 'required|exists:tbl_users,id',
             'title' => 'required|string|max:255',
-            'no_transaksi' => 'required|string|unique:tbl_submission,no_transaksi',
+            'no_transaksi' => 'required|string',
             'remark' => 'nullable|string',
-            'lampiran_pdf' => 'required|mimes:pdf|max:2048',
+            'lampiran_pdf' => 'required|mimes:pdf',
         ]);
 
         \Log::info('Received request data:', $request->all());
@@ -92,57 +92,72 @@ class SubmissionController extends Controller
             \Log::info('File path:', ['path' => $filePath]);
         }
 
-        // Simpan data ke database
-        Submission::create([
-            'id_departement' => $request->id_departement,
-            'id_kategori' => $request->id_kategori,
-            'id_user' => $request->id_user,
-            'title' => $request->title,
-            'no_transaksi' => $request->no_transaksi,
-            'remark' => $request->remark,
-            'lampiran_pdf' => $filePath,
-        ]);
+        try {
+            Submission::create([
+                'id_departement' => $request->id_departement,
+                'id_kategori' => $request->id_kategori,
+                'id_user' => $request->id_user,
+                'title' => $request->title,
+                'no_transaksi' => $request->no_transaksi,
+                'remark' => $request->remark,
+                'lampiran_pdf' => $filePath,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error saving submission:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
+        }
+
 
         return redirect()->route('submissions.index')->with('success', 'Submission berhasil dibuat.');
     }
-
-
-
     // Tampilkan daftar submission
     public function index()
-    {
-        $user = auth()->user();
-        $role = $user->role; // Asumsikan Anda memiliki atribut 'role' di tabel pengguna
+{
+    $user = auth()->user();
+    $roleName = $user->role->name; // Ambil nama role dari relasi role
+    $userDepartmentId = $user->id_departement; // Departemen pengguna
 
-        // Data awal untuk role 'prepared'
-        $submissions = Submission::with(['kategori', 'departement', 'user', 'approvals'])
-            ->when($role === 'prepared', function ($query) {
-                return $query; // Prepared melihat semua data
-            })
-            ->when($role === 'Check 1', function ($query) {
-                return $query->whereHas('approvals', function ($subQuery) {
-                    $subQuery->where('status', 'approved')->where('auditor_id', auth()->id());
-                });
-            })
-            ->when($role === 'Check 2', function ($query) {
-                return $query->whereHas('approvals', function ($subQuery) {
-                    $subQuery->where('status', 'approved')->where('auditor_id', auth()->id());
-                });
-            })
-            ->when($role === 'Approved', function ($query) {
-                return $query->whereDoesntHave('approvals', function ($subQuery) {
-                    $subQuery->where('status', 'rejected');
-                });
-            })
-            ->when($role === 'viewer', function ($query) {
-                return $query->whereHas('approvals', function ($subQuery) {
-                    $subQuery->where('status', 'approved');
-                });
-            })
-            ->get();
+    $submissions = Submission::with(['kategori', 'departement', 'user', 'approvals'])
+        ->when($roleName === 'prepared', function ($query) use ($user) {
+            // Prepared hanya melihat submission yang dibuat oleh user yang login
+            return $query->where('id_user', $user->id);
+        })
+        ->when($roleName === 'Check1', function ($query) use ($userDepartmentId) {
+            // Check1 hanya melihat submission sesuai departemen dan belum diproses
+            return $query->where(function ($query) use ($userDepartmentId) {
+                $query->whereDoesntHave('approvals') // Tidak ada data di tabel approvals
+                      ->orWhereHas('approvals', function ($subQuery) {
+                          $subQuery->whereNull('status'); // Jika ada, pastikan status masih null
+                      });
+            })->where('id_departement', $userDepartmentId);
+        })
+        ->when($roleName === 'Check2', function ($query) use ($userDepartmentId) {
+            // Check2 hanya melihat submission yang sudah disetujui oleh Check1
+            return $query->whereHas('approvals', function ($subQuery) {
+                $subQuery->where('status', 'approved') // Disetujui oleh Check1
+                         ->whereHas('user', function ($userQuery) {
+                             $userQuery->whereHas('role', function ($roleQuery) {
+                                 $roleQuery->where('name', 'Check1'); // Role Check1
+                             });
+                         });
+            })->where('id_departement', $userDepartmentId);
+        })
+        ->when($roleName === 'approved', function ($query) {
+            // Role Approved menampilkan submission dari semua departemen
+            // Yang sudah disetujui oleh Check2, tetapi belum diproses oleh Approved
+            return $query->whereHas('approvals', function ($subQuery) {
+                $subQuery->whereNull('status') // Belum diproses oleh Approved
+                         ->whereHas('user', function ($userQuery) {
+                             $userQuery->whereHas('role', function ($roleQuery) {
+                                 $roleQuery->where('name', 'Check2'); // Sudah disetujui oleh Check2
+                             });
+                         });
+            });
+        })
+        ->get();
 
-        return view('Pages.Approval.index-approval', compact('submissions'));
-    }
+    return view('Pages.Approval.index-approval', compact('submissions', 'roleName'));
+}
 
 
     // Download file PDF

@@ -41,6 +41,7 @@
                                 <thead class="thead-light">
                                     <tr>
                                         <th scope="col" class="text-center">NO</th>
+                                        <th scope="col" class="text-center">Bagian</th>
                                         <th scope="col" class="text-center">Nama</th>
                                         <th scope="col" class="text-center">Email</th>
                                         <th scope="col" class="text-center">Role</th>
@@ -52,6 +53,7 @@
                                     @foreach ($users as $user)
                                         <tr>
                                             <td class="text-center">{{ $loop->iteration }}</td>
+                                            <td class="text-center">{{ $user->departement->nama_departement }}</td>
                                             <td class="text-center">{{ $user->name }}</td>
                                             <td class="text-center">{{ $user->email }}</td>
                                             <td class="text-center">{{ $user->role->name }}</td>
