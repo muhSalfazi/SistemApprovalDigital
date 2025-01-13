@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_submission');
             $table->unsignedBigInteger('auditor_id');
             $table->enum('status',['approved','rejected']);
+            $table->string('remark')->nullable();
             $table->dateTime('approved_date');
             $table->timestamps();
 

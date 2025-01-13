@@ -27,23 +27,28 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">List of Submissions</h5>
-                <div class="mb-3">
-                    <a href="{{ route('submissions.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-square"></i> Add Submission
-                    </a>
-                </div>
+                @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
+                    <div class="mb-3">
+                        <a href="{{ route('submissions.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-square"></i> Add Submission
+                        </a>
+                    </div>
+                @endif
                 <div class="table-responsive">
-                    <table class="table table-striped table-bordered">
+                    <table class="table table-striped table-bordered datatable">
                         <thead>
                             <tr>
-                                <th>No</th>
-                                <th>Bagian</th>
-                                <th>No Transaksi</th>
-                                <th>Title</th>
-                                <th>Remark</th>
-                                <th>Attachment</th>
-                                <th>Prepare</th>
-                                <th>Date Submission</th>
+                                <th  scope="col" class="text-center">No</th>
+                                <th  scope="col" class="text-center">Bagian</th>
+                                <th  scope="col" class="text-center">No Transaksi</th>
+                                <th  scope="col" class="text-center">Title</th>
+                                <th  scope="col" class="text-center">Remark</th>
+                                <th  scope="col" class="text-center">Attachment</th>
+                                <th  scope="col" class="text-center">Prepare</th>
+                                <th  scope="col" class="text-center">Date Submission</th>
+                                @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
+                                     <th scope="col" class="text-center">Aksi</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -65,22 +70,45 @@
                                     <td>{{ $submission->no_transaksi }}</td>
                                     <td>{{ $submission->title }}</td>
                                     <td>{{ $submission->remark }}</td>
+                                @if (Auth::check() && in_array(Auth::user()->role->name, ['Check1', 'Check2', 'approvalManager']))
                                     <td>
                                         <button class="btn btn-info btn-sm"
                                             onclick="openApprovalModal({{ $submission->id }}, '{{ asset($submission->lampiran_pdf) }}')">
                                             View
                                         </button>
                                     </td>
-                                    <td>{{ $submission->user->name }}</td>
+                                @endif
+                                {{-- prepared view  --}}
+                                @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
+                                    <td>
+                                        @if ($submission->lampiran_pdf)
+                                            <a href="{{ asset($submission->lampiran_pdf) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                        @else
+                                            <span class="text-muted">No File</span>
+                                        @endif
+                                    </td>
+                                @endif
+                                    <td>{{ $submission->user->name }}|{{ $submission->user->departement->nama_departement }}</td>
                                     <td>{{ \Carbon\Carbon::parse($submission->created_at)->format('d M Y H:i:s') }}</td>
-                                </tr>
-                                @else
-                                <tr>
-                                    <td colspan="8" class="text-center">No submissions available.</td>
+                                @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
+                                    <td>
+                                        <form action="{{ route('submissions.destroy', $submission->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus submission ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                     </td>
+                                @endif
                                 </tr>
                                 @endif
                             @empty
-
+                            <tr>
+                                <td colspan="8" class="text-center">No submissions available.</td>
+                            </tr>
                             @endforelse
                         </tbody>
 
@@ -117,7 +145,8 @@
                                     </div>
                                 </div>
                                 <div class="mt-3">
-                                    <label for="remark">Remark (Required if NO):</label>
+                                    <label for="remark">Remark:<small class="text-danger"
+                                        style="font-size: 0.8rem;"> Diperlukan jika "TIDAK"</small> </label>
                                     <textarea id="remark" class="form-control" rows="3" placeholder="Enter your remark"></textarea>
                                 </div>
                             </div>

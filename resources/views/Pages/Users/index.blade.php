@@ -53,7 +53,7 @@
                                     @foreach ($users as $user)
                                         <tr>
                                             <td class="text-center">{{ $loop->iteration }}</td>
-                                            <td class="text-center">{{ $user->departement->nama_departement }}</td>
+                                            <td class="text-center">{{ $user->departement->nama_departement ?? '-' }}</td>
                                             <td class="text-center">{{ $user->name }}</td>
                                             <td class="text-center">{{ $user->email }}</td>
                                             <td class="text-center">{{ $user->role->name }}</td>
@@ -115,16 +115,6 @@
                                                                 <input type="text" name="password" id="editPassword"
                                                                     class="form-control">
                                                             </div>
-                                                            <div class="col-md-12 mb-3">
-                                                                <label for="editRole" class="form-label">Role</label>
-                                                                <select name="role" id="editRole" class="form-select"
-                                                                    required>
-                                                                    <option value="admin">Admin</option>
-                                                                    <option value="prepared">Prepared</option>
-                                                                    <option value="approver">Approver</option>
-                                                                    <option value="viewer">Viewer</option>
-                                                                </select>
-                                                            </div>
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary"
@@ -161,19 +151,6 @@
                     document.getElementById('editName').value = data.user.name;
                     document.getElementById('editEmail').value = data.user.email;
                     document.getElementById('editPassword').value = ''; // Kosongkan password
-
-                    // Isi dropdown role
-                    const roleDropdown = document.getElementById('editRole');
-                    roleDropdown.innerHTML = ''; // Kosongkan opsi sebelumnya
-                    data.roles.forEach(role => {
-                        const option = document.createElement('option');
-                        option.value = role.id;
-                        option.textContent = role.name;
-                        if (role.id === data.user.role_id) {
-                            option.selected = true; // Tandai role yang dipilih
-                        }
-                        roleDropdown.appendChild(option);
-                    });
 
                     // Tampilkan modal
                     const modal = new bootstrap.Modal(document.getElementById('editUserModal'));

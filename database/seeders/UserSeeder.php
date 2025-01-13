@@ -20,7 +20,6 @@ class UserSeeder extends Seeder
             'email' => 'superAdmin@mail.com',
             'password' => Hash::make('superAdmin'),
             'role_id' => Role::where('name', 'superadmin')->first()->id,
-            'id_departement' => Departement::where('nama_departement', 'ALL')->first()->id,
         ]);
 
     }

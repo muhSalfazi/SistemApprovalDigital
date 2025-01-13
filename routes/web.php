@@ -44,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('kategori/{kategori}', [KategoriController::class, 'update'])->name('kategori.update');
     Route::delete('kategori/{kategori}', [KategoriController::class, 'destroy'])->name('kategori.destroy');
 
+    // submission route
     Route::get('/approv', [SubmissionController::class, 'index'])->name('submissions.index');
     Route::get('submissions/create', [SubmissionController::class, 'create'])->name('submissions.create');
     Route::post('submission', [SubmissionController::class, 'store'])->name('submissions.store');
@@ -51,12 +52,13 @@ Route::middleware(['auth'])->group(function () {
     Route::put('submissions/{submission}', [SubmissionController::class, 'update'])->name('submissions.update');
     Route::delete('submissions/{submission}', [SubmissionController::class, 'destroy'])->name('submissions.destroy');
 
-    // Additional Route for Download
-    Route::get('submissions/{submission}/download', [SubmissionController::class, 'download'])->name('submissions.download');
+    // download file
+    Route::get('submissions/download/{id}', [SubmissionController::class, 'download'])->name('submissions.download');
+    // generate transaction number
     Route::get('submissions/generate-transaction-number', [SubmissionController::class, 'generateTransactionNumber'])->name('submissions.generateTransactionNumber');
+    // approval store
     Route::post('/submissions/approval', [ApprovalController::class, 'store'])->name('submissions.approval');
 
-
-
-
+    // history approval
+    Route::get('/approval/history', [ApprovalController::class, 'index'])->name('approval.history');
 });

@@ -51,33 +51,35 @@
                     </div>
                     <div class="col-md-6">
                         <label for="role" class="form-label">Role</label>
-                        <select name="role" id="role" class="form-select  mb-3 @error('role') is-invalid @enderror"
-                            required>
-                            <option value="" disabled selected>Pilih Role</option>
+                        <select name="role" id="role" class="form-select mb-3 @error('role') is-invalid @enderror" required>
+                            <option value="" disabled {{ old('role') ? '' : 'selected' }}>Pilih Role</option>
                             <option value="prepared" {{ old('role') == 'prepared' ? 'selected' : '' }}>prepared</option>
                             <option value="Check1" {{ old('role') == 'Check1' ? 'selected' : '' }}>Check1</option>
-                            <option value="Check2" {{ old('role') == 'Check1' ? 'selected' : '' }}>Check2</option>
-                            <option value="Approved" {{ old('role') == 'Approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="Check2" {{ old('role') == 'Check2' ? 'selected' : '' }}>Check2</option>
+                            <option value="approvalManager" {{ old('role') == 'approvalManager' ? 'selected' : '' }}>approvalManager</option>
                             <option value="viewer" {{ old('role') == 'viewer' ? 'selected' : '' }}>Viewer</option>
                         </select>
                         @error('role')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+
                     <div class="col-md-6">
                         <label for="role" class="form-label">Departement</label>
                         <select name="departement" id="departement"
-                            class="form-select  mb-3 @error('departement') is-invalid @enderror" required>
+                            class="form-select mb-3 @error('departement') is-invalid @enderror" required>
                             <option value="" disabled selected>Pilih Departement</option>
                             <option value="HRGA" {{ old('departement') == 'HRGA' ? 'selected' : '' }}>HRGA</option>
                             <option value="FAS" {{ old('departement') == 'FAS' ? 'selected' : '' }}>FAS</option>
                             <option value="PPIC" {{ old('departement') == 'PPIC' ? 'selected' : '' }}>PPIC</option>
-                            <option value="ALL" {{ old('departement') == 'ALL' ? 'selected' : '' }}>ALL</option>
                         </select>
+                        <small class="text-muted">*Role "approvalManager" dan "viewer" tidak perlu memilih
+                            departemen</small>
                         @error('departement')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+
                     <div class="col-6">
                         <button class="btn btn-primary" type="submit">Create User</button>
                     </div>
@@ -101,6 +103,33 @@
                 passwordIcon.classList.remove('bi-eye');
                 passwordIcon.classList.add('bi-eye-slash');
             }
+        });
+    </script>
+    {{-- filter role --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleSelect = document.getElementById('role');
+            const departmentSelect = document.getElementById('departement');
+
+            // Fungsi untuk mengubah status dropdown Departement
+            function updateDepartmentStatus() {
+                const selectedRole = roleSelect.value;
+
+                if (selectedRole === 'approvalManager' || selectedRole === 'viewer') {
+                    departmentSelect.disabled = true;
+                    departmentSelect.required = false; // Tidak diperlukan
+                    departmentSelect.value = ""; // Reset nilai
+                } else {
+                    departmentSelect.disabled = false;
+                    departmentSelect.required = true; // Diperlukan
+                }
+            }
+
+            // Jalankan saat halaman dimuat
+            updateDepartmentStatus();
+
+            // Event listener untuk perubahan pada role
+            roleSelect.addEventListener('change', updateDepartmentStatus);
         });
     </script>
 

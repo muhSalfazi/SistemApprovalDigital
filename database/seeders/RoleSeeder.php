@@ -19,7 +19,7 @@ class RoleSeeder extends Seeder
             'prepared',
             'Check1',
             'Check2',
-            'Approved',
+            'approvalManager',
             'viewer',
         ];
 

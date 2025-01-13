@@ -1,27 +1,40 @@
 <aside id="sidebar" class="sidebar hiden">
     <ul class="sidebar-nav" id="sidebar-nav">
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('submissions.index', 'submissions.create') ? 'active' : 'collapsed' }}"
-                href="{{ route('submissions.index') }}">
-                <i class="fas fa-file-alt"></i>
-                <span>Submission</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('kategori.index') ? 'active' : 'collapsed' }}"
-                href="{{ route('kategori.index') }}">
-                <i class="bi-folder"></i>
-                <span>Kategori</span>
-            </a>
-        </li>
-        <li class="nav-heading">User Management</li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('users.index', 'users.create') ? 'active' : 'collapsed' }}"
-                href="{{ route('users.index') }}">
-                <i class="bi bi-people-fill"></i>
-                <span>User</span>
-            </a>
-        </li>
+        @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared', 'Check1', 'Check2', 'approvalManager']))
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('submissions.index', 'submissions.create') ? 'active' : 'collapsed' }}"
+                    href="{{ route('submissions.index') }}">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Submission</span>
+                </a>
+            </li>
+        @endif
+        @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared', 'viewer']))
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('approval.history') ? 'active' : 'collapsed' }}"
+                    href="{{ route('approval.history') }}">
+                    <i class="bi bi-clock-history"></i>
+                    <span>View Approval History</span>
+                </a>
+            </li>
+        @endif
+        @if (Auth::check() && in_array(Auth::user()->role->name, ['superadmin']))
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('kategori.index') ? 'active' : 'collapsed' }}"
+                    href="{{ route('kategori.index') }}">
+                    <i class="bi-folder"></i>
+                    <span>Kategori</span>
+                </a>
+            </li>
+            <li class="nav-heading">User Management</li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('users.index', 'users.create') ? 'active' : 'collapsed' }}"
+                    href="{{ route('users.index') }}">
+                    <i class="bi bi-people-fill"></i>
+                    <span>User</span>
+                </a>
+            </li>
+        @endif
         <li class="nav-heading">Auth</li>
         <li class="nav-item">
             <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">

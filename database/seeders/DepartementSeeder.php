@@ -18,7 +18,7 @@ class DepartementSeeder extends Seeder
             ['nama_departement' => 'HRGA'],
             ['nama_departement' => 'FAS'],
             ['nama_departement' => 'PPIC'],
-            ['nama_departement' => 'ALL'],
+            // ['nama_departement' => 'ALL'],
         ];
 
         // Buat data departemen menggunakan Eloquent

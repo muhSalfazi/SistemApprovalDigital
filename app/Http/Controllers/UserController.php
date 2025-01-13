@@ -42,8 +42,8 @@ class UserController extends Controller
             'name' => 'nullable|string|max:20|unique:tbl_users,name',
             'email' => 'nullable|string|max:20|unique:tbl_users,email',
             'password' => 'nullable|string|min:8',
-            'role' => 'required|in:prepared,Check1,Check2,Approved,viewer',
-            'departement' => 'required|in:HRGA,FAS,PPIC,ALL',
+            'role' => 'required|in:prepared,Check1,Check2,approvalManager,viewer',
+            'departement' => 'nullable|in:HRGA,FAS,PPIC',
         ]);
 
         // Simpan user ke database
@@ -89,27 +89,25 @@ class UserController extends Controller
     }
 
     public function update(Request $request, $userId)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:tbl_users,email,' . $userId,
-        'password' => 'nullable|string|min:8',
-        'role' => 'required|exists:tbl_roles,id', // Pastikan role adalah ID yang valid di tabel roles
-    ]);
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:tbl_users,email,' . $userId,
+            'password' => 'nullable|string|min:8',
+        ]);
 
-    $user = User::findOrFail($userId);
-    $user->name = $request->name;
-    $user->email = $request->email;
+        $user = User::findOrFail($userId);
+        $user->name = $request->name;
+        $user->email = $request->email;
 
-    if ($request->password) {
-        $user->password = Hash::make($request->password);
+        if ($request->password) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
     }
-
-    $user->role_id = $request->role; // Langsung gunakan role sebagai role_id
-    $user->save();
-
-    return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
-}
 
 
 

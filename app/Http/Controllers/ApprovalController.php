@@ -6,6 +6,35 @@ use Illuminate\Http\Request;
 
 class ApprovalController extends Controller
 {
+    public function index(Request $request)
+{
+    $user = auth()->user();
+    $roleName = $user->role->name; // Nama role user yang sedang login
+
+    // Ambil data approval berdasarkan role
+    $approvals = Approval::select('tbl_approval.*')
+    ->join('tbl_submission', 'tbl_approval.id_submission', '=', 'tbl_submission.id')
+    ->with(['submission', 'user', 'submission.departement', 'submission.user'])
+    ->when($roleName === 'prepared', function ($query) use ($user) {
+        $query->whereHas('submission', function ($subQuery) use ($user) {
+            $subQuery->where('id_user', $user->id);
+        });
+    })
+    ->when($roleName === 'viewer', function ($query) {
+        $query->where('status', 'approved')->whereHas('user.role', function ($roleQuery) {
+            $roleQuery->where('name', 'approvalManager');
+        });
+    })
+    // ->orderBy('tbl_approval.approved_date', 'desc') // Urutkan berdasarkan tanggal persetujuan
+    ->orderBy('tbl_submission.no_transaksi', 'asc') // Urutkan berdasarkan nomor transaksi
+    ->get();
+
+
+    // Return view dengan data approvals
+    return view('Pages.Approval.historyapprove', compact('approvals', 'roleName'));
+}
+
+
     public function store(Request $request)
     {
         $validated = $request->validate([

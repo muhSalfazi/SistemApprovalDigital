@@ -461,6 +461,27 @@
         }
     </script>
 
+    {{-- sweet alert login sukses --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script>
+        @if (session('login-sukses'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: '{!! session('login-sukses') !!}',
+                // timer: 1500,
+                timerProgressBar: true,
+                showClass: {
+                    popup: 'animate__animated animate__bounceInDown' // Menambahkan animasi muncul
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp' // Menambahkan animasi saat ditutup
+                },
+            });
+        @endif
+
+    </script>
+
 </body>
 
 </html>

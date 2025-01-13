@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property int $id_submission
@@ -39,7 +39,8 @@ class Approval extends Model
         'id_submission',
         'auditor_id',
         'status',
-        'approved_date'
+        'approved_date',
+        'remark',
     ];
 
     public function submission()
