@@ -40,7 +40,8 @@ Sistem Approval Digital adalah aplikasi berbasis web yang dirancang untuk memper
   - Lihat status pengajuan: **Approved**, **Rejected**, atau **In Review**.
   - Hapus pengajuan.
 
-![Halaman Submission](tampilan-index-approve.png)
+![Halaman Submission](https://github.com/user-attachments/assets/800c8dbc-b665-4bf3-b639-e285fd614aa7)
+
 
 ---
 
@@ -48,7 +49,8 @@ Sistem Approval Digital adalah aplikasi berbasis web yang dirancang untuk memper
 - Menampilkan riwayat persetujuan untuk setiap pengajuan berdasarkan ID.
 - Informasi lengkap terkait proses persetujuan.
 
-![Halaman Approval History](tampilan-history-approve.png)
+![Halaman Approval History](https://github.com/user-attachments/assets/b3ced0e4-98a3-4668-a869-9d1f920a8d80)
+
 
 ---
 
