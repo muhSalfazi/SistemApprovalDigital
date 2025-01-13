@@ -107,7 +107,7 @@
                                 @endif
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center">No submissions available.</td>
+                                <td colspan="9" class="text-center">No submissions available.</td>
                             </tr>
                             @endforelse
                         </tbody>
