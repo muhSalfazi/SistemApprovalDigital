@@ -11,7 +11,7 @@
         @endif
         @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared', 'viewer']))
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('approval.history') ? 'active' : 'collapsed' }}"
+                <a class="nav-link {{ request()->routeIs('approval.history', 'approval.history.id') ? 'active' : 'collapsed' }}"
                     href="{{ route('approval.history') }}">
                     <i class="bi bi-clock-history"></i>
                     <span>View Approval History</span>

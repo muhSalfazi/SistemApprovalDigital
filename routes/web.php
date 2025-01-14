@@ -61,4 +61,7 @@ Route::middleware(['auth'])->group(function () {
 
     // history approval
     Route::get('/approval/history', [ApprovalController::class, 'index'])->name('approval.history');
+    // history perid
+    Route::get('/approval/history/{id_submission}', [ApprovalController::class, 'history'])->name('approval.history.id');
+
 });

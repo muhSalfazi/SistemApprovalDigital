@@ -120,11 +120,11 @@ class SubmissionController extends Controller
 
         $allowedDepartments = [$userDepartmentId];
         $submissions = Submission::with(['kategori', 'departement', 'user', 'approvals'])
-        ->when($roleName === 'prepared', function ($query) use ($user, $allowedDepartments) {
-            // Filter submission berdasarkan user yang login
-            return $query->where('id_user', $user->id)
-                ->whereIn('id_departement', $allowedDepartments); // Filter berdasarkan departemen yang diizinkan
-        })
+            ->when($roleName === 'prepared', function ($query) use ($user, $allowedDepartments) {
+                // Filter submission berdasarkan user yang login
+                return $query->where('id_user', $user->id)
+                    ->whereIn('id_departement', $allowedDepartments); // Filter berdasarkan departemen yang diizinkan
+            })
 
             ->when($roleName === 'Check1', function ($query) use ($userDepartmentId) {
                 // Check1 hanya melihat submission sesuai departemen dan belum diproses
@@ -166,7 +166,7 @@ class SubmissionController extends Controller
                             });
                         });
                 })
-                ->whereDoesntHave('approvals', function ($subQuery) {
+                    ->whereDoesntHave('approvals', function ($subQuery) {
                     $subQuery->whereHas('user', function ($userQuery) {
                         $userQuery->whereHas('role', function ($roleQuery) {
                             $roleQuery->where('name', 'approvalManager'); // Sudah ada approval oleh approvalManager

@@ -200,6 +200,14 @@
                 }
             });
         @endif
+
+        @if (session('alert'))
+        Swal.fire({
+            icon: '{{ session('alert.type') }}', // Tipe alert (success, warning, error, info)
+            title: 'Pemberitahuan',
+            text: '{{ session('alert.message') }}',
+        });
+    @endif
     </script>
     <style>
         .small-swal-popup {

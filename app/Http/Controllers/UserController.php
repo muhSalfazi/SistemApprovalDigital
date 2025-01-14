@@ -29,7 +29,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('Pages.users.create');
+        return view('Pages.Users.create');
     }
 
     /**
@@ -39,8 +39,8 @@ class UserController extends Controller
     {
         // Validasi input
         $request->validate([
-            'name' => 'nullable|string|max:20|unique:tbl_users,name',
-            'email' => 'nullable|string|max:20|unique:tbl_users,email',
+            'name' => 'nullable|string|max:100|unique:tbl_users,name',
+            'email' => 'nullable|string|max:100|unique:tbl_users,email',
             'password' => 'nullable|string|min:8',
             'role' => 'required|in:prepared,Check1,Check2,approvalManager,viewer',
             'departement' => 'nullable|in:HRGA,FAS,PPIC',

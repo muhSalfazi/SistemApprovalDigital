@@ -38,77 +38,109 @@
                     <table class="table table-striped table-bordered datatable">
                         <thead>
                             <tr>
-                                <th  scope="col" class="text-center">No</th>
-                                <th  scope="col" class="text-center">Bagian</th>
-                                <th  scope="col" class="text-center">No Transaksi</th>
-                                <th  scope="col" class="text-center">Title</th>
-                                <th  scope="col" class="text-center">Remark</th>
-                                <th  scope="col" class="text-center">Attachment</th>
-                                <th  scope="col" class="text-center">Prepare</th>
-                                <th  scope="col" class="text-center">Date Submission</th>
+                                <th scope="col" class="text-center">No</th>
+                                <th scope="col" class="text-center">Bagian</th>
+                                <th scope="col" class="text-center">No Transaksi</th>
+                                <th scope="col" class="text-center">Title</th>
+                                <th scope="col" class="text-center">Remark</th>
+                                <th scope="col" class="text-center">Status</th>
+                                <th scope="col" class="text-center">Attachment</th>
+                                <th scope="col" class="text-center">Prepare</th>
+                                <th scope="col" class="text-center">Date Submission</th>
                                 @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
-                                     <th scope="col" class="text-center">Aksi</th>
+                                    <th scope="col" class="text-center">Aksi</th>
                                 @endif
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($submissions as $submission)
-                            @if (
-                                !$submission->approvals->last() || // Submission belum memiliki approval
-                                (
-                                    $submission->approvals->last()->status === 'approved' && // Status sudah disetujui
-                                    (
-                                        $submission->approvals->last()->user->role->name === 'Check1' || // Disetujui oleh Check1
-                                        $submission->approvals->last()->user->role->name === 'Check2'    // Disetujui oleh Check2
-                                    )
-                                )
-                            )
-
-                            <tr>
+                                <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $submission->departement->nama_departement ?? 'Unknown' }}</td>
                                     <td>{{ $submission->no_transaksi }}</td>
                                     <td>{{ $submission->title }}</td>
                                     <td>{{ $submission->remark }}</td>
-                                @if (Auth::check() && in_array(Auth::user()->role->name, ['Check1', 'Check2', 'approvalManager']))
                                     <td>
-                                        <button class="btn btn-info btn-sm"
-                                            onclick="openApprovalModal({{ $submission->id }}, '{{ asset($submission->lampiran_pdf) }}')">
-                                            View
-                                        </button>
-                                    </td>
-                                @endif
-                                {{-- prepared view  --}}
-                                @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
-                                    <td>
-                                        @if ($submission->lampiran_pdf)
-                                            <a href="{{ asset($submission->lampiran_pdf) }}" target="_blank" class="btn btn-outline-primary btn-sm">
-                                                <i class="bi bi-eye"></i> View
-                                            </a>
-                                        @else
-                                            <span class="text-muted">No File</span>
+                                        @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
+                                            @if ($submission->approvals->last())
+                                                @php
+                                                    $lastApproval = $submission->approvals->last();
+                                                    $status = $lastApproval->status;
+                                                    $roleName = $lastApproval->user->role->name;
+
+                                                    // Tentukan status berdasarkan role dan status approval
+                                                    $statusText = match (true) {
+                                                        $status === 'approved' && $roleName === 'approvalManager'
+                                                            => 'Approved',
+                                                        $status === 'approved' &&
+                                                            in_array($roleName, ['Check1', 'Check2'])
+                                                            => 'In Review',
+                                                        $status === 'rejected' => 'Rejected',
+                                                        default => 'In Review',
+                                                    };
+
+                                                    $badgeClass = match (true) {
+                                                        $status === 'approved' && $roleName === 'approvalManager'
+                                                            => 'bg-success',
+                                                        $status === 'rejected' => 'bg-danger',
+                                                        default => 'bg-warning',
+                                                    };
+                                                @endphp
+
+                                                <a href="{{ route('approval.history.id', ['id_submission' => $submission->id]) }}"
+                                                    class="badge {{ $badgeClass }} text-decoration-none"
+                                                    title="Click to view history for submission {{ $submission->id }}">
+                                                    {{ $statusText }}
+                                                </a>
+                                            @else
+                                                <a href="{{ route('approval.history.id', ['id_submission' => $submission->id]) }}"
+                                                    class="badge bg-secondary text-decoration-none"
+                                                    title="Click to view history for submission {{ $submission->id }}">
+                                                    Pending
+                                                </a>
+                                            @endif
                                         @endif
                                     </td>
-                                @endif
-                                    <td>{{ $submission->user->name }}|{{ $submission->user->departement->nama_departement }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($submission->created_at)->format('d M Y H:i:s') }}</td>
-                                @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
-                                    <td>
-                                        <form action="{{ route('submissions.destroy', $submission->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus submission ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="bi bi-trash"></i> Delete
+
+                                    @if (Auth::check() && in_array(Auth::user()->role->name, ['Check1', 'Check2', 'approvalManager']))
+                                        <td>
+                                            <button class="btn btn-info btn-sm"
+                                                onclick="openApprovalModal({{ $submission->id }}, '{{ asset($submission->lampiran_pdf) }}')">
+                                                View
                                             </button>
-                                        </form>
-                                     </td>
-                                @endif
+                                        </td>
+                                    @endif
+                                    {{-- prepared view  --}}
+                                    @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
+                                        <td>
+                                            @if ($submission->lampiran_pdf)
+                                                <a href="{{ asset($submission->lampiran_pdf) }}" target="_blank"
+                                                    class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            @else
+                                                <span class="text-muted">No File</span>
+                                            @endif
+                                        </td>
+                                    @endif
+                                    <td>{{ $submission->user->name }}|{{ $submission->user->departement->nama_departement }}
+                                    </td>
+                                    <td>{{ \Carbon\Carbon::parse($submission->created_at)->format('d M Y H:i:s') }}</td>
+                                    @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared']))
+                                        <td>
+                                            <form action="{{ route('submissions.destroy', $submission->id) }}"
+                                                method="POST"
+                                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus submission ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    @endif
                                 </tr>
-                                @endif
                             @empty
-                            <tr>
-                                <td colspan="9" class="text-center">No submissions available.</td>
-                            </tr>
                             @endforelse
                         </tbody>
 
@@ -145,8 +177,8 @@
                                     </div>
                                 </div>
                                 <div class="mt-3">
-                                    <label for="remark">Remark:<small class="text-danger"
-                                        style="font-size: 0.8rem;"> Diperlukan jika "TIDAK"</small> </label>
+                                    <label for="remark">Remark:<small class="text-danger" style="font-size: 0.8rem;">
+                                            Diperlukan jika "TIDAK"</small> </label>
                                     <textarea id="remark" class="form-control" rows="3" placeholder="Enter your remark"></textarea>
                                 </div>
                             </div>
