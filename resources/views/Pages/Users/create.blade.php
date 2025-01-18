@@ -20,11 +20,19 @@
 
                 <form class="row g-3 needs-validation" novalidate method="POST" action="{{ route('users.store') }}">
                     @csrf
-                    <div class="col-md-12">
+                    <div class="col-md-6">
                         <label for="username" class="form-label">Name</label>
                         <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
                             value="{{ old('name') }}" placeholder="silahkan inputkan nama user" required>
                         @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label for="ID-card" class="form-label">id-card-NIK</label>
+                        <input type="text" name="ID-card" class="form-control @error('ID-card') is-invalid @enderror"
+                            value="{{ old('ID-card') }}" placeholder="silahkan inputkan nama ID-card"required >
+                        @error('ID-card')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -53,11 +61,11 @@
                         <label for="role" class="form-label">Role</label>
                         <select name="role" id="role" class="form-select mb-3 @error('role') is-invalid @enderror" required>
                             <option value="" disabled {{ old('role') ? '' : 'selected' }}>Pilih Role</option>
-                            <option value="prepared" {{ old('role') == 'prepared' ? 'selected' : '' }}>prepared</option>
-                            <option value="Check1" {{ old('role') == 'Check1' ? 'selected' : '' }}>Check1</option>
-                            <option value="Check2" {{ old('role') == 'Check2' ? 'selected' : '' }}>Check2</option>
-                            <option value="approvalManager" {{ old('role') == 'approvalManager' ? 'selected' : '' }}>approvalManager</option>
-                            <option value="viewer" {{ old('role') == 'viewer' ? 'selected' : '' }}>Viewer</option>
+                            @foreach ($roles as $role)
+                                <option value="{{ $role->name }}" {{ old('role') == $role->name ? 'selected' : '' }}>
+                                    {{ ucfirst($role->name) }}
+                                </option>
+                            @endforeach
                         </select>
                         @error('role')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -108,28 +116,72 @@
     {{-- filter role --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.querySelector('input[name="email"]');
             const roleSelect = document.getElementById('role');
             const departmentSelect = document.getElementById('departement');
 
             // Fungsi untuk mengubah status dropdown Departement
-            function updateDepartmentStatus() {
-                const selectedRole = roleSelect.value;
+            function updateDepartmentStatus(selectedRole = null) {
+                const role = selectedRole || roleSelect.value;
 
-                if (selectedRole === 'approvalManager' || selectedRole === 'viewer') {
+                if (role === 'approved' || role === 'viewer') {
                     departmentSelect.disabled = true;
-                    departmentSelect.required = false; // Tidak diperlukan
+                    departmentSelect.required = false;
                     departmentSelect.value = ""; // Reset nilai
                 } else {
                     departmentSelect.disabled = false;
-                    departmentSelect.required = true; // Diperlukan
+                    departmentSelect.required = true;
                 }
             }
+
+            emailInput.addEventListener('blur', function() {
+                const email = emailInput.value;
+
+                if (!email) return;
+
+                // Kirim permintaan AJAX untuk memeriksa email
+                fetch('{{ route('check-email') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    },
+                    body: JSON.stringify({ email }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        // Disable role yang sudah dimiliki user, kecuali superadmin
+                        Array.from(roleSelect.options).forEach(option => {
+                            if (option.value !== 'superadmin') {
+                                option.disabled = data.roles.includes(option.value);
+                            }
+                        });
+
+                        // Update status departement berdasarkan role pertama yang dimiliki
+                        if (data.roles.length > 0) {
+                            updateDepartmentStatus(data.roles[0]); // Role pertama untuk status awal
+                        }
+                    } else {
+                        // Enable semua role jika email tidak ditemukan
+                        Array.from(roleSelect.options).forEach(option => {
+                            option.disabled = false;
+                        });
+
+                        // Reset departement ke default
+                        updateDepartmentStatus();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
 
             // Jalankan saat halaman dimuat
             updateDepartmentStatus();
 
             // Event listener untuk perubahan pada role
-            roleSelect.addEventListener('change', updateDepartmentStatus);
+            roleSelect.addEventListener('change', function() {
+                updateDepartmentStatus();
+            });
         });
     </script>
 

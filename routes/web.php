@@ -35,6 +35,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('users/{userId}', [UserController::class, 'update'])->name('users.update');
+    Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check-email');
+
+
 
     // kategori route
     Route::get('kategori', [KategoriController::class, 'index'])->name('kategori.index');
@@ -51,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('submissions/{submission}/edit', [SubmissionController::class, 'edit'])->name('submissions.edit');
     Route::put('submissions/{submission}', [SubmissionController::class, 'update'])->name('submissions.update');
     Route::delete('submissions/{submission}', [SubmissionController::class, 'destroy'])->name('submissions.destroy');
+    Route::get('/submissions/{id}/details', [SubmissionController::class, 'getSubmissionDetails'])->name('submissions.details');
 
     // download file
     Route::get('submissions/download/{id}', [SubmissionController::class, 'download'])->name('submissions.download');
@@ -63,5 +67,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/approval/history', [ApprovalController::class, 'index'])->name('approval.history');
     // history perid
     Route::get('/approval/history/{id_submission}', [ApprovalController::class, 'history'])->name('approval.history.id');
+
+    Route::get('/get-approval-data/{submissionId}', [ApprovalController::class, 'getApprovalData']);
+
+    Route::get('/modal/{submissionId}/approval-table', [ApprovalController::class, 'getApprovalTable']);
+
 
 });

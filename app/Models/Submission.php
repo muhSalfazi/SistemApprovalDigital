@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property int $id_departement
@@ -66,15 +66,15 @@ class Submission extends Model
         return $this->belongsTo(Kategori::class, 'id_kategori');
     }
 
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'id_user');
-    }
-
     public function approvals()
     {
         return $this->hasMany(Approval::class, 'id_submission');
     }
 
-    // end foreign key
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
+    }
+
 }

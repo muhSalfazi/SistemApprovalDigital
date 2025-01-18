@@ -43,6 +43,11 @@ class Approval extends Model
         'remark',
     ];
 
+    protected $casts = [
+        'approved_date' => 'datetime',
+    ];
+
+
     public function submission()
     {
         return $this->belongsTo(Submission::class, 'id_submission');
@@ -52,4 +57,6 @@ class Approval extends Model
     {
         return $this->belongsTo(User::class, 'auditor_id');
     }
+
+
 }

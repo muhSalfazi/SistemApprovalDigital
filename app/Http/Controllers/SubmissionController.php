@@ -115,71 +115,78 @@ class SubmissionController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $roleName = $user->role->name; // Ambil nama role dari relasi role
+
+        // Ambil semua nama role pengguna
+        $roleNames = $user->roles->pluck('name');
+
+        if ($roleNames->isEmpty()) {
+            abort(403, 'User does not have a role assigned.');
+        }
+
         $userDepartmentId = $user->id_departement; // Departemen pengguna
-
         $allowedDepartments = [$userDepartmentId];
-        $submissions = Submission::with(['kategori', 'departement', 'user', 'approvals'])
-            ->when($roleName === 'prepared', function ($query) use ($user, $allowedDepartments) {
-                // Filter submission berdasarkan user yang login
-                return $query->where('id_user', $user->id)
-                    ->whereIn('id_departement', $allowedDepartments); // Filter berdasarkan departemen yang diizinkan
-            })
 
-            ->when($roleName === 'Check1', function ($query) use ($userDepartmentId) {
-                // Check1 hanya melihat submission sesuai departemen dan belum diproses
-                return $query->where(function ($query) use ($userDepartmentId) {
-                    $query->whereDoesntHave('approvals') // Tidak ada data di tabel approvals
+        // Query untuk menyesuaikan semua role yang dimiliki
+        $submissions = Submission::with(['kategori', 'departement', 'user', 'approvals.user.roles'])
+            ->when($roleNames->contains('prepared'), function ($query) use ($user, $allowedDepartments) {
+                // Data untuk role 'prepared'
+                $query->orWhere(function ($query) use ($user, $allowedDepartments) {
+                    $query->where('id_user', $user->id)
+                          ->whereIn('id_departement', $allowedDepartments);
+                });
+            })
+            ->when($roleNames->contains('Check1'), function ($query) use ($userDepartmentId) {
+                // Data untuk role 'Check1'
+                $query->orWhere(function ($query) use ($userDepartmentId) {
+                    $query->where(function ($query) use ($userDepartmentId) {
+                        $query->whereDoesntHave('approvals', function ($subQuery) {
+                            $subQuery->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->whereIn('name', ['Check1', 'Check2', 'approved']);
+                            });
+                        })
                         ->orWhereHas('approvals', function ($subQuery) {
-                            $subQuery->whereNull('status'); // Jika ada, pastikan status masih null
+                            $subQuery->whereNull('status'); // Approval dengan status null
                         });
-                })->where('id_departement', $userDepartmentId);
+                    })->where('id_departement', $userDepartmentId);
+                });
             })
-            ->when($roleName === 'Check2', function ($query) use ($userDepartmentId) {
-                // Check2 hanya melihat submission yang sudah disetujui oleh Check1
-                // dan belum memiliki approval oleh Check2 pada departemen atau submission tertentu
-                return $query->whereHas('approvals', function ($subQuery) {
-                    $subQuery->where('status', 'approved') // Disetujui oleh Check1
-                        ->whereHas('user', function ($userQuery) {
-                            $userQuery->whereHas('role', function ($roleQuery) {
-                                $roleQuery->where('name', 'Check1'); // Role Check1
-                            });
-                        });
-                })
-                    ->where('id_departement', $userDepartmentId) // Hanya untuk departemen pengguna
+            ->when($roleNames->contains('Check2'), function ($query) use ($userDepartmentId) {
+                // Data untuk role 'Check2'
+                $query->orWhere(function ($query) use ($userDepartmentId) {
+                    $query->whereHas('approvals', function ($subQuery) {
+                        $subQuery->where('status', 'approved')
+                                 ->whereHas('user.roles', function ($roleQuery) {
+                                     $roleQuery->where('name', 'Check1');
+                                 });
+                    })
+                    ->where('id_departement', $userDepartmentId)
                     ->whereDoesntHave('approvals', function ($subQuery) {
-                    $subQuery->whereHas('user', function ($userQuery) {
-                        $userQuery->whereHas('role', function ($roleQuery) {
-                            $roleQuery->where('name', 'Check2'); // Sudah ada approval oleh Check2
+                        $subQuery->whereHas('user.roles', function ($roleQuery) {
+                            $roleQuery->whereIn('name', ['Check2', 'approved']);
                         });
                     });
                 });
             })
-            ->when($roleName === 'approvalManager', function ($query) {
-                // approvalManager melihat semua submission yang disetujui oleh Check2
-                // dan belum diproses oleh approvalManager
-                return $query->whereHas('approvals', function ($subQuery) {
-                    $subQuery->where('status', 'approved') // Disetujui oleh Check2
-                        ->whereHas('user', function ($userQuery) {
-                            $userQuery->whereHas('role', function ($roleQuery) {
-                                $roleQuery->where('name', 'Check2'); // Role Check2
-                            });
-                        });
-                })
+            ->when($roleNames->contains('approved'), function ($query) {
+                // Data untuk role 'approved'
+                $query->orWhere(function ($query) {
+                    $query->whereHas('approvals', function ($subQuery) {
+                        $subQuery->where('status', 'approved')
+                                 ->whereHas('user.roles', function ($roleQuery) {
+                                     $roleQuery->where('name', 'Check2');
+                                 });
+                    })
                     ->whereDoesntHave('approvals', function ($subQuery) {
-                    $subQuery->whereHas('user', function ($userQuery) {
-                        $userQuery->whereHas('role', function ($roleQuery) {
-                            $roleQuery->where('name', 'approvalManager'); // Sudah ada approval oleh approvalManager
+                        $subQuery->whereHas('user.roles', function ($roleQuery) {
+                            $roleQuery->where('name', 'approved');
                         });
                     });
                 });
             })
-
             ->get();
 
-        return view('Pages.Approval.index-approval', compact('submissions', 'roleName'));
+        return view('Pages.Approval.index-approval', compact('submissions', 'roleNames'));
     }
-
 
     // Download file PDF
     public function download($id)
@@ -213,5 +220,6 @@ class SubmissionController extends Controller
             \Log::error('Error deleting submission:', ['error' => $e->getMessage()]);
             return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan saat menghapus submission.']);
         }
+
     }
 }

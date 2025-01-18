@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property string $name
@@ -38,5 +38,11 @@ class Role extends Model
     {
         return $this->hasMany(User::class, 'role_id');
     }
+
+       // Relasi ke users melalui tabel pivot role_user
+       public function users()
+       {
+           return $this->belongsToMany(User::class, 'role_user', 'role_id', 'user_id');
+       }
 
 }

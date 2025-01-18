@@ -1,6 +1,7 @@
 <aside id="sidebar" class="sidebar hiden">
     <ul class="sidebar-nav" id="sidebar-nav">
-        @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared', 'Check1', 'Check2', 'approvalManager']))
+   @if (Auth::check() && Auth::user()->roles->isNotEmpty())
+        @if (Auth::user()->roles->pluck('name')->intersect(['prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('submissions.index', 'submissions.create') ? 'active' : 'collapsed' }}"
                     href="{{ route('submissions.index') }}">
@@ -9,7 +10,7 @@
                 </a>
             </li>
         @endif
-        @if (Auth::check() && in_array(Auth::user()->role->name, ['prepared', 'viewer']))
+        @if (Auth::user()->roles->pluck('name')->intersect(['prepared', 'viewer'])->isNotEmpty())
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('approval.history', 'approval.history.id') ? 'active' : 'collapsed' }}"
                     href="{{ route('approval.history') }}">
@@ -18,7 +19,7 @@
                 </a>
             </li>
         @endif
-        @if (Auth::check() && in_array(Auth::user()->role->name, ['superadmin']))
+        @if (Auth::user()->roles->pluck('name')->contains('superadmin'))
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('kategori.index') ? 'active' : 'collapsed' }}"
                     href="{{ route('kategori.index') }}">
@@ -35,6 +36,7 @@
                 </a>
             </li>
         @endif
+     @endif
         <li class="nav-heading">Auth</li>
         <li class="nav-item">
             <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
