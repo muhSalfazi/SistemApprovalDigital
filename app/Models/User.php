@@ -61,7 +61,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'last_login',
-        'ID-card',
+        'IDcard',
         'id_departement'
     ];
 

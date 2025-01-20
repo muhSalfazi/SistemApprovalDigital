@@ -31,7 +31,7 @@
                     <div class="col-md-6">
                         <label for="ID-card" class="form-label">id-card-NIK</label>
                         <input type="text" name="ID-card" class="form-control @error('ID-card') is-invalid @enderror"
-                            value="{{ old('ID-card') }}" placeholder="silahkan inputkan nama ID-card"required >
+                            value="{{ old('ID-card') }}" placeholder="silahkan inputkan nama ID-card"required>
                         @error('ID-card')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -59,7 +59,8 @@
                     </div>
                     <div class="col-md-6">
                         <label for="role" class="form-label">Role</label>
-                        <select name="role" id="role" class="form-select mb-3 @error('role') is-invalid @enderror" required>
+                        <select name="role" id="role" class="form-select mb-3 @error('role') is-invalid @enderror"
+                            required>
                             <option value="" disabled {{ old('role') ? '' : 'selected' }}>Pilih Role</option>
                             @foreach ($roles as $role)
                                 <option value="{{ $role->name }}" {{ old('role') == $role->name ? 'selected' : '' }}>
@@ -141,38 +142,40 @@
 
                 // Kirim permintaan AJAX untuk memeriksa email
                 fetch('{{ route('check-email') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    },
-                    body: JSON.stringify({ email }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.exists) {
-                        // Disable role yang sudah dimiliki user, kecuali superadmin
-                        Array.from(roleSelect.options).forEach(option => {
-                            if (option.value !== 'superadmin') {
-                                option.disabled = data.roles.includes(option.value);
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({
+                            email
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            // Disable role yang sudah dimiliki user, kecuali superadmin
+                            Array.from(roleSelect.options).forEach(option => {
+                                if (option.value !== 'superadmin') {
+                                    option.disabled = data.roles.includes(option.value);
+                                }
+                            });
+
+                            // Update status departement berdasarkan role pertama yang dimiliki
+                            if (data.roles.length > 0) {
+                                updateDepartmentStatus(data.roles[0]); // Role pertama untuk status awal
                             }
-                        });
+                        } else {
+                            // Enable semua role jika email tidak ditemukan
+                            Array.from(roleSelect.options).forEach(option => {
+                                option.disabled = false;
+                            });
 
-                        // Update status departement berdasarkan role pertama yang dimiliki
-                        if (data.roles.length > 0) {
-                            updateDepartmentStatus(data.roles[0]); // Role pertama untuk status awal
+                            // Reset departement ke default
+                            updateDepartmentStatus();
                         }
-                    } else {
-                        // Enable semua role jika email tidak ditemukan
-                        Array.from(roleSelect.options).forEach(option => {
-                            option.disabled = false;
-                        });
-
-                        // Reset departement ke default
-                        updateDepartmentStatus();
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+                    })
+                    .catch(error => console.error('Error:', error));
             });
 
             // Jalankan saat halaman dimuat

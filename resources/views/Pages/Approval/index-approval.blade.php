@@ -38,11 +38,7 @@
                                 <th scope="col" class="text-center">Attachment</th>
                                 <th scope="col" class="text-center">Prepare</th>
                                 <th scope="col" class="text-center">Date Submission</th>
-                                @if (Auth::check() && Auth::user()->roles->isNotEmpty())
-                                    @if (Auth::user()->roles->pluck('name')->contains('prepared'))
-                                        <th scope="col" class="text-center">Aksi</th>
-                                    @endif
-                                @endif
+                              <th scope="col" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -55,50 +51,53 @@
                                     <td>{{ $submission->remark }}</td>
                                     <td>
                                         @if (Auth::check() &&
-                                                Auth::user()->roles->pluck('name')->intersect(['prepared','Check1', 'Check2', 'approved'])->isNotEmpty())
-                                            @if ($submission->approvals->last())
-                                                @php
-                                                    $lastApproval = $submission->approvals->last();
-                                                    $status = $lastApproval->status ?? 'Pending';
-                                                    $roleName =
-                                                        $lastApproval->user->roles
-                                                            ->pluck('name')
-                                                            ->intersect(['Check1', 'Check2', 'approved'])
-                                                            ->first() ?? 'Unknown';
-                                                    $approvalDate = $lastApproval->approved_date
-                                                        ? \Carbon\Carbon::parse($lastApproval->approved_date)->format(
-                                                            'd M Y H:i:s',
-                                                        )
-                                                        : 'N/A';
+                                        Auth::user()->roles->pluck('name')->intersect(['superadmin', 'prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
+                                        @if ($submission->approvals->last())
+                                            @php
+                                                $lastApproval = $submission->approvals->last();
+                                                $status = $lastApproval->status ?? 'Pending';
 
-                                                    // Tentukan teks status
-                                                    $statusText = match (true) {
-                                                        $status === 'approved' => 'Approved by ' . ucfirst($roleName),
-                                                        $status === 'rejected' => 'Rejected',
-                                                        default => 'Pending',
-                                                    };
+                                                // Daftar role dengan prioritas tertinggi ke terendah
+                                                $rolePriorities = ['approved', 'Check2', 'Check1', 'prepared'];
 
-                                                    // Tentukan kelas badge
-                                                    $badgeClass = match (true) {
-                                                        $status === 'approved' => 'bg-success',
-                                                        $status === 'rejected' => 'bg-danger',
-                                                        default => 'bg-secondary',
-                                                    };
-                                                @endphp
+                                                // Ambil role pengguna yang sesuai dengan prioritas tertinggi
+                                                $userRoles = $lastApproval->user->roles->pluck('name')->toArray();
+                                                $highestRole = collect($rolePriorities)->first(function ($role) use ($userRoles) {
+                                                    return in_array($role, $userRoles);
+                                                }) ?? 'Unknown';
 
-                                                <span class="badge {{ $badgeClass }}"
-                                                    title="Last approval by {{ ucfirst($roleName) }}">
-                                                    {{ $statusText }}
-                                                </span>
-                                                <br>
-                                                <small class="text-muted">Date: {{ $approvalDate }}</small>
-                                            @else
-                                                <span class="badge bg-secondary">Pending</span>
-                                            @endif
+                                                $approvalDate = $lastApproval->approved_date
+                                                    ? \Carbon\Carbon::parse($lastApproval->approved_date)->format('d M Y H:i:s')
+                                                    : 'N/A';
+
+                                                // Tentukan teks status
+                                                $statusText = match (true) {
+                                                    $status === 'approved' => 'Approved by ' . ucfirst($highestRole),
+                                                    $status === 'rejected' => 'Rejected',
+                                                    default => 'Pending',
+                                                };
+
+                                                // Tentukan kelas badge berdasarkan status
+                                                $badgeClass = match (true) {
+                                                    $status === 'approved' => 'bg-success',
+                                                    $status === 'rejected' => 'bg-danger',
+                                                    default => 'bg-secondary',
+                                                };
+                                            @endphp
+
+                                            <span class="badge {{ $badgeClass }}"
+                                                title="Last approval by {{ ucfirst($highestRole) }}">
+                                                {{ $statusText }}
+                                            </span>
+                                            <br>
+                                            <small class="text-muted">Date: {{ $approvalDate }}</small>
+                                        @else
+                                            <span class="badge bg-secondary">Pending</span>
                                         @endif
+                                    @endif
                                     </td>
                                     @if (Auth::check() && Auth::user()->roles->isNotEmpty())
-                                        @if (Auth::user()->roles->pluck('name')->intersect(['prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
+                                        @if (Auth::user()->roles->pluck('name')->intersect(['superadmin','prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
                                             <td>
                                                 <button class="btn btn-info btn-sm"
                                                     onclick="openApprovalModal({{ $submission->id }}, '{{ asset($submission->lampiran_pdf) }}')">
@@ -137,37 +136,41 @@
                 </div>
                 {{-- style --}}
                 <style>
-                        /* Atur margin dan padding di tabel */
-    #approvalTableBody tr {
-        margin: 0;
-        padding: 0;
-    }
+                    /* Atur margin dan padding di tabel */
+                    #approvalTableBody tr {
+                        margin: 0;
+                        padding: 0;
+                    }
 
-    #approvalTableBody td, #approvalTableBody th {
-        padding: 5px 10px; /* Kurangi padding untuk lebih rapat */
-        font-size: 14px; /* Ukuran font lebih kecil untuk tabel */
-    }
+                    #approvalTableBody td,
+                    #approvalTableBody th {
+                        padding: 5px 10px;
+                        /* Kurangi padding untuk lebih rapat */
+                        font-size: 14px;
+                        /* Ukuran font lebih kecil untuk tabel */
+                    }
 
-    /* Atur jarak antar baris */
-    #approvalTableBody tr {
-        line-height: 1.2; /* Atur tinggi baris */
-    }
+                    /* Atur jarak antar baris */
+                    #approvalTableBody tr {
+                        line-height: 1.2;
+                        /* Atur tinggi baris */
+                    }
 
-    /* Kurangi jarak di antara header tabel dan isi */
-    .modal-body table {
-        margin-bottom: 10px;
-    }
+                    /* Kurangi jarak di antara header tabel dan isi */
+                    .modal-body table {
+                        margin-bottom: 10px;
+                    }
 
-    /* Atur margin modal lebih rapat */
-    .modal-body {
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
+                    /* Atur margin modal lebih rapat */
+                    .modal-body {
+                        padding-top: 10px;
+                        padding-bottom: 10px;
+                    }
 
-    /* Jarak antar elemen dalam modal */
-    .modal-body > * {
-        margin-bottom: 10px;
-    }
+                    /* Jarak antar elemen dalam modal */
+                    .modal-body>* {
+                        margin-bottom: 10px;
+                    }
 
                     .pdf-container {
                         height: 500px;
@@ -206,20 +209,20 @@
                             <div class="modal-body">
                                 <div class="table-responsive">
                                     <table class="table table-bordered approval-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Approval Stage</th>
-                                            <th>Status</th>
-                                            <th>Approved By</th>
-                                            <th>Approval Date</th>
-                                            <th>Approval Remark</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="approvalTableBody">
-                                        <!-- Data akan diisi oleh JavaScript -->
-                                    </tbody>
-                                </table>
-                            </div>
+                                        <thead>
+                                            <tr>
+                                                <th>Approval Stage</th>
+                                                <th>Status</th>
+                                                <th>Approved By</th>
+                                                <th>Approval Date</th>
+                                                <th>Approval Remark</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="approvalTableBody">
+                                            <!-- Data akan diisi oleh JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
                                 <!-- PDF Viewer -->
                                 <div id="pdfViewerContainer" class="pdf-container rounded shadow-sm"></div>
 
@@ -253,15 +256,16 @@
                     </div>
                 </div>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js"></script>
 
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
                 <script>
+                    // Fungsi untuk mengisi tabel persetujuan di modal
                     function populateApprovalTable(submissionId) {
                         const approvalTableBody = document.getElementById('approvalTableBody');
-                        approvalTableBody.innerHTML = ''; // Reset table
+                        approvalTableBody.innerHTML = ''; // Kosongkan tabel sebelum diisi ulang
 
-                        fetch(`/modal/${submissionId}/approval-table`) // Gunakan route untuk tabel modal
+                        fetch(`/modal/${submissionId}/approval-table`) // Route untuk mengambil data persetujuan
                             .then((response) => {
                                 if (!response.ok) {
                                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -272,7 +276,7 @@
                                 if (!data.approvals || data.approvals.length === 0) {
                                     approvalTableBody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="text-center">No data available</td>
+                        <td colspan="5" class="text-center">No data available</td>
                     </tr>
                 `;
                                     return;
@@ -306,82 +310,110 @@
                             });
                     }
 
+                    // Fungsi untuk membuka modal persetujuan
                     function openApprovalModal(submissionId, pdfPath) {
-    // Fetch untuk tabel modal
-    populateApprovalTable(submissionId);
+                        // Pastikan elemen modal tersedia sebelum manipulasi
+                        const pdfViewerContainer = document.getElementById('pdfViewerContainer');
+                        if (pdfViewerContainer) {
+                            pdfViewerContainer.setAttribute('data-id', submissionId);
+                        } else {
+                            console.error('Elemen pdfViewerContainer tidak ditemukan');
+                        }
 
-    // Fetch untuk validasi form
-    fetch(`/get-approval-data/${submissionId}`)
-        .then((response) => response.json())
-        .then((data) => {
-            const { userRole, existingApproval, canApprove } = data;
+                        // Fetch data tabel persetujuan
+                        populateApprovalTable(submissionId);
 
-            // Validasi Form
-            const statusFormContainer = document.getElementById('statusFormContainer');
-            const remarkContainer = document.getElementById('remarkContainer');
-            const submitButton = document.getElementById('submitButton');
+                        // Fetch data untuk form validasi
+                        fetch(`/get-approval-data/${submissionId}`)
+                            .then((response) => response.json())
+                            .then((data) => {
+                                const {
+                                    canApprove
+                                } = data;
 
-            // Reset form
-            document.getElementById('approveStatus').checked = false;
-            document.getElementById('rejectStatus').checked = false;
-            document.getElementById('remark').value = '';
+                                const statusFormContainer = document.getElementById('statusFormContainer');
+                                const remarkContainer = document.getElementById('remarkContainer');
+                                const submitButton = document.getElementById('submitButton');
 
-            // Tampilkan atau sembunyikan form berdasarkan `canApprove`
-            if (!canApprove) {
-                statusFormContainer.style.display = 'none';
-                remarkContainer.style.display = 'none';
-                submitButton.style.display = 'none';
-            } else {
-                statusFormContainer.style.display = 'block';
-                remarkContainer.style.display = 'block';
-                submitButton.style.display = 'block';
-            }
+                                // Reset form
+                                document.getElementById('approveStatus').checked = false;
+                                document.getElementById('rejectStatus').checked = false;
+                                document.getElementById('remark').value = '';
 
-            // Tampilkan PDF menggunakan PDF.js
-            renderPDF(pdfPath);
+                                // Menampilkan atau menyembunyikan form berdasarkan hak akses
+                                if (!canApprove) {
+                                    statusFormContainer.style.display = 'none';
+                                    remarkContainer.style.display = 'none';
+                                    submitButton.style.display = 'none';
+                                } else {
+                                    statusFormContainer.style.display = 'block';
+                                    remarkContainer.style.display = 'block';
+                                    submitButton.style.display = 'block';
+                                }
 
-            const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
-            modal.show();
-        })
-        .catch((error) => {
-            console.error('Error fetching approval data:', error);
-        });
-}
+                                // Tampilkan PDF menggunakan PDF.js
+                                renderPDF(pdfPath);
 
-// Fungsi untuk menampilkan PDF menggunakan PDF.js
-function renderPDF(pdfPath) {
-    const container = document.getElementById('pdfViewerContainer');
-    container.innerHTML = ''; // Kosongkan kontainer sebelum merender PDF
+                                // Tampilkan modal
+                                const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
+                                modal.show();
+                            })
+                            .catch((error) => {
+                                console.error('Error fetching approval data:', error);
+                            });
+                    }
 
-    const loadingTask = pdfjsLib.getDocument(pdfPath);
-    loadingTask.promise.then((pdf) => {
-        // Render halaman pertama PDF
-        pdf.getPage(1).then((page) => {
-            const viewport = page.getViewport({ scale: 1.5 });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+                    // Fungsi untuk merender PDF menggunakan PDF.js
+                    function renderPDF(pdfPath) {
+                        const container = document.getElementById('pdfViewerContainer');
+                        if (!container) {
+                            console.error('Elemen pdfViewerContainer tidak ditemukan');
+                            return;
+                        }
 
-            container.appendChild(canvas);
+                        container.innerHTML = ''; // Kosongkan sebelum render
 
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport,
-            };
-            page.render(renderContext);
-        });
-    }).catch((error) => {
-        console.error('Error loading PDF:', error);
-        container.innerHTML = '<p class="text-danger">Unable to load PDF.</p>';
-    });
-}
+                        const loadingTask = pdfjsLib.getDocument(pdfPath);
+                        loadingTask.promise.then((pdf) => {
+                            pdf.getPage(1).then((page) => {
+                                const viewport = page.getViewport({
+                                    scale: 1.5
+                                });
+                                const canvas = document.createElement('canvas');
+                                const context = canvas.getContext('2d');
+                                canvas.height = viewport.height;
+                                canvas.width = viewport.width;
 
+                                container.appendChild(canvas);
 
+                                const renderContext = {
+                                    canvasContext: context,
+                                    viewport: viewport,
+                                };
+                                page.render(renderContext);
+                            });
+                        }).catch((error) => {
+                            console.error('Error loading PDF:', error);
+                            container.innerHTML = '<p class="text-danger">Unable to load PDF.</p>';
+                        });
+                    }
+
+                    // Fungsi untuk submit persetujuan
                     function submitApproval() {
                         const status = document.querySelector('input[name="approvalStatus"]:checked');
                         const remark = document.getElementById('remark').value;
-                        const submissionId = document.getElementById('pdfViewer').getAttribute('data-id');
+                        const pdfViewerContainer = document.getElementById('pdfViewerContainer');
+
+                        if (!pdfViewerContainer) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Kesalahan',
+                                text: 'Data tidak ditemukan, coba lagi.',
+                            });
+                            return;
+                        }
+
+                        const submissionId = pdfViewerContainer.getAttribute('data-id');
 
                         if (!status) {
                             Swal.fire({
@@ -408,7 +440,6 @@ function renderPDF(pdfPath) {
                             _token: '{{ csrf_token() }}',
                         };
 
-                        // Confirm before submitting
                         Swal.fire({
                             title: 'Konfirmasi',
                             text: `Apakah Anda yakin ingin ${status.value === 'approved' ? 'MENYETUJUI' : 'MENOLAK'} dokumen ini?`,

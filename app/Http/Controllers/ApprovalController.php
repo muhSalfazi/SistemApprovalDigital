@@ -17,24 +17,18 @@ class ApprovalController extends Controller
             ->when($roleNames->contains('prepared'), function ($query) use ($user) {
                 $query->where('id_user', $user->id); // Filter berdasarkan user logged-in
             })
+            ->when($roleNames->contains('viewer'), function ($query) {
+                $query->whereHas('approvals', function ($subQuery) {
+                    $subQuery->whereHas('user.roles', function ($roleQuery) {
+                        $roleQuery->where('name', 'approved'); // Pastikan submission telah disetujui
+                    })->where('status', 'approved'); // Status approval harus 'approved'
+                });
+            })
             ->get();
 
         return view('Pages.Approval.historyapprove', compact('submissions', 'roleNames'));
     }
 
-    public function history($id_submission)
-    {
-        $user = auth()->user();
-        $roleName = $user->role->name;
-        $approvals = Approval::where('id_submission', $id_submission)
-            ->with(['submission', 'user', 'submission.departement', 'submission.user'])
-            ->orderBy('approved_date', 'asc')
-            ->get();
-
-        $submission = $approvals->first()?->submission;
-
-        return view('Pages.Approval.historyperid', compact('approvals', 'submission'));
-    }
 
 
     public function store(Request $request)
@@ -137,22 +131,38 @@ class ApprovalController extends Controller
         try {
             $submission = Submission::with(['approvals.user.roles'])->findOrFail($submissionId);
 
-            $approvalStages = ['Check1', 'Check2', 'Approved'];
+            $approvalStages = ['Check1', 'Check2', 'approved'];
 
-            $approvals = collect($approvalStages)->map(function ($stage) use ($submission) {
-                $approval = $submission->approvals->first(function ($a) use ($stage) {
+            $approvals = collect($approvalStages)->flatMap(function ($stage) use ($submission) {
+                // Ambil semua approvals yang terkait dengan role tertentu
+                $filteredApprovals = $submission->approvals->filter(function ($a) use ($stage) {
                     return $a->user->roles->pluck('name')->contains($stage);
                 });
 
-                return [
-                    'stage' => $stage,
-                    'status' => $approval->status ?? 'Pending',
-                    'approved_by' => $approval->user->name ?? '-',
-                    'date' => $approval?->approved_date instanceof \Carbon\Carbon
-                    ? $approval->approved_date->format('d M Y H:i:s')
-                    : '-',
-                    'remark' => $approval->remark ?? '-',
-                ];
+                if ($filteredApprovals->isEmpty()) {
+                    return [
+                        [
+                            'stage' => $stage,
+                            'status' => 'Pending',
+                            'approved_by' => '-',
+                            'date' => '-',
+                            'remark' => '-',
+                        ]
+                    ];
+                }
+
+                // Mengembalikan semua approvals yang sesuai dengan role
+                return $filteredApprovals->map(function ($approval) use ($stage) {
+                    return [
+                        'stage' => $stage,
+                        'status' => $approval->status ?? 'Pending',
+                        'approved_by' => $approval->user->name ?? '-',
+                        'date' => $approval->approved_date
+                            ? $approval->approved_date->format('d M Y H:i:s')
+                            : '-',
+                        'remark' => $approval->remark ?? '-',
+                    ];
+                })->toArray();
             });
 
             return response()->json([
@@ -164,4 +174,8 @@ class ApprovalController extends Controller
             ], 500);
         }
     }
+
+
+
+
 }

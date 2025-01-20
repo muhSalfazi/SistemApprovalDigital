@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name', 50);
             $table->string('email')->nullable();
             $table->string('password')->nullable();
-            $table->string('ID-card')->nullable();
+            $table->string('IDcard')->nullable();
             $table->unsignedBigInteger('id_departement')->nullable();
             $table->datetime('last_login')->nullable();
             $table->timestamps();

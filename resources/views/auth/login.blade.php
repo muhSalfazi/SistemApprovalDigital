@@ -50,7 +50,6 @@
 </style>
 
 <body>
-
     <main>
         <div class="container">
             <section
@@ -76,15 +75,14 @@
                                         method="POST" novalidate>
                                         @csrf
                                         <div class="col-12">
-                                            <label for="email" class="form-label">Email</label>
-                                            <input type="email" name="email"
-                                                class="form-control @error('email') is-invalid @enderror" id="email"
-                                                value="{{ old('email') }}" required>
-                                            @error('email')
+                                            <label for="loginIdentifier" class="form-label">Email / ID-Card</label>
+                                            <input type="text" name="loginIdentifier"
+                                                class="form-control @error('loginIdentifier') is-invalid @enderror"
+                                                id="loginIdentifier" value="{{ old('loginIdentifier') }}" required>
+                                            @error('loginIdentifier')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
-
                                         <div class="col-12">
                                             <label for="yourPassword" class="form-label">Password</label>
                                             <div class="input-group has-validation">
@@ -202,12 +200,12 @@
         @endif
 
         @if (session('alert'))
-        Swal.fire({
-            icon: '{{ session('alert.type') }}', // Tipe alert (success, warning, error, info)
-            title: 'Pemberitahuan',
-            text: '{{ session('alert.message') }}',
-        });
-    @endif
+            Swal.fire({
+                icon: '{{ session('alert.type') }}', // Tipe alert (success, warning, error, info)
+                title: 'Pemberitahuan',
+                text: '{{ session('alert.message') }}',
+            });
+        @endif
     </script>
     <style>
         .small-swal-popup {

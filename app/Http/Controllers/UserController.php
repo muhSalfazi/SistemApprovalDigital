@@ -45,52 +45,46 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input
+        // Validasi input untuk mencegah duplikasi di level aplikasi dan database
         $request->validate([
             'name' => 'nullable|string|max:100',
-            'ID-card' => 'nullable|string|max:8',
-            'email' => 'nullable|string|email|max:100',
+            'ID-card' => 'nullable|string|max:8|unique:tbl_users,IDcard',
+            'email' => 'nullable|string|email|max:100|unique:tbl_users,email',
             'password' => 'nullable|string|min:8',
             'role' => 'required|in:prepared,Check1,Check2,approved,viewer',
             'departement' => 'nullable|in:HRGA,FAS,PPIC',
         ]);
 
-        // Cari user berdasarkan email atau ID-card
-        $userQuery = User::query();
-        if ($request->filled('email')) {
-            $userQuery->where('email', $request->email);
-        }
-        if ($request->filled('ID-card')) {
-            $userQuery->orWhere('ID-card', $request->input('ID-card'));
-        }
-        $user = $userQuery->first();
+        // Cek apakah pengguna dengan email atau ID-card sudah ada di database
+        $existingUser = User::where('email', $request->email)
+            ->orWhere('IDcard', $request->input('ID-card'))
+            ->first();
 
-        if ($user) {
-            // Jika user sudah ada, tambahkan role
-            $roleId = Role::where('name', $request->role)->value('id');
-            if ($roleId && !$user->roles->contains('id', $roleId)) {
-                $user->roles()->attach($roleId);
-            }
-        } else {
-            // Jika user belum ada, buat user baru
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'ID-card' => $request->input('ID-card'),
-                'id_departement' => $this->getDepartementID($request->departement),
-                'password' => $request->password ? Hash::make($request->password) : null,
-            ]);
-
-            // Tambahkan role ke user baru
-            $roleId = Role::where('name', $request->role)->value('id');
-            if ($roleId) {
-                $user->roles()->attach($roleId);
-            }
+        if ($existingUser) {
+            return redirect()->back()
+                ->withInput() // Mengembalikan input ke form
+                ->withErrors([
+                    'email' => 'Email atau ID-card sudah terdaftar di sistem.',
+                ]);
         }
 
-        return redirect()->route('users.index')->with('success', 'User berhasil disimpan.');
+        // Jika pengguna belum ada, buat user baru
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'IDcard' => $request->input('ID-card'),
+            'id_departement' => $this->getDepartementID($request->departement),
+            'password' => $request->password ? Hash::make($request->password) : null,
+        ]);
+
+        // Tambahkan role ke user baru
+        $roleId = Role::where('name', $request->role)->value('id');
+        if ($roleId) {
+            $user->roles()->attach($roleId);
+        }
+
+        return redirect()->route('users.index')->with('success', 'User baru berhasil dibuat.');
     }
-
 
     /**
      * Get role ID from role name.
@@ -99,7 +93,6 @@ class UserController extends Controller
     {
         return \App\Models\Departement::where('nama_departement', $departement_name)->value('id');
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -117,27 +110,40 @@ class UserController extends Controller
         return response()->json([
             'user' => $user,
             'roles' => $roles,
-            'userRoles' => $userRoles, // Tambahkan role yang dimiliki user
+            'userRoles' => $userRoles,
         ]);
     }
+
+    public function editID($userId)
+    {
+        $user = User::with('roles')->findOrFail($userId);
+
+        // Gunakan nama tabel yang benar jika berbeda
+        $roles = Role::where('name', '!=', 'superadmin')->get();
+
+        return response()->json([
+            'user' => $user,
+            'roles' => $roles,
+            'userRoles' => $user->roles->pluck('name')->toArray(),
+        ]);
+
+    }
+
 
     public function update(Request $request, $userId)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:tbl_users,email,' . $userId,
-            'ID-card' => 'nullable|string|max:50|unique:tbl_users,ID-card,' . $userId,
+            'ID-card' => 'nullable|string|max:50|unique:tbl_users,IDcard,' . $userId,
             'password' => 'nullable|string|min:8',
-            'roles' => 'required|array', // Validasi roles sebagai array
-            'roles.*' => 'exists:roles,name', // Validasi setiap role harus ada di database
+            'role' => 'nullable|in:prepared,Check1,Check2,approved,viewer',
         ]);
 
         $user = User::findOrFail($userId);
-
-        // Update user fields
         $user->name = $request->name;
         $user->email = $request->email;
-        $user->{'ID-card'} = $request->{'ID-card'};
+        $user->IDcard = $request->input('ID-card');
 
         if ($request->password) {
             $user->password = Hash::make($request->password);
@@ -145,9 +151,17 @@ class UserController extends Controller
 
         $user->save();
 
-        // Update user roles
-        $roleIds = Role::whereIn('name', $request->roles)->pluck('id')->toArray(); // Ambil ID roles dari nama
-        $user->roles()->sync($roleIds); // Sinkronkan role dengan user
+        // Cek apakah role sudah ada pada user sebelum menambahkannya
+        if ($request->role) {
+            $roleId = Role::where('name', $request->role)->value('id');
+
+            if ($roleId && !$user->roles->pluck('id')->contains($roleId)) {
+                $user->roles()->attach($roleId);
+                return redirect()->route('users.index')->with('success', 'User berhasil diperbarui dan role ditambahkan.');
+            } else {
+                return redirect()->route('users.index')->with('error', 'Role sudah dimiliki oleh pengguna.');
+            }
+        }
 
         return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
     }
@@ -157,7 +171,6 @@ class UserController extends Controller
     {
         $request->validate([
             'email' => 'sometimes|email',
-            'ID-card' => 'sometimes|',
         ]);
 
         $user = User::with('roles')->where('email', $request->email)->first();

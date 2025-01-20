@@ -36,7 +36,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('users/{userId}', [UserController::class, 'update'])->name('users.update');
     Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check-email');
-
+    Route::get('users/{userId}/edit', [UserController::class, 'edit']);
 
 
     // kategori route
@@ -57,7 +57,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/submissions/{id}/details', [SubmissionController::class, 'getSubmissionDetails'])->name('submissions.details');
 
     // download file
-    Route::get('submissions/download/{id}', [SubmissionController::class, 'download'])->name('submissions.download');
+    // Route::get('submissions/download/{id}', [SubmissionController::class, 'download'])->name('submissions.download');
+    Route::get('/download-qrcode/{id}', [SubmissionController::class, 'downloadWithQRCode'])->name('submissions.download');
     // generate transaction number
     Route::get('submissions/generate-transaction-number', [SubmissionController::class, 'generateTransactionNumber'])->name('submissions.generateTransactionNumber');
     // approval store
@@ -65,12 +66,7 @@ Route::middleware(['auth'])->group(function () {
 
     // history approval
     Route::get('/approval/history', [ApprovalController::class, 'index'])->name('approval.history');
-    // history perid
-    Route::get('/approval/history/{id_submission}', [ApprovalController::class, 'history'])->name('approval.history.id');
-
     Route::get('/get-approval-data/{submissionId}', [ApprovalController::class, 'getApprovalData']);
-
     Route::get('/modal/{submissionId}/approval-table', [ApprovalController::class, 'getApprovalTable']);
-
 
 });

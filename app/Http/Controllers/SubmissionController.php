@@ -7,6 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Departement;
 use App\Models\Kategori;
+use Mpdf\Mpdf;
+use Mpdf\Output\Destination;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\Writer\PngWriter;
+use Illuminate\Support\Facades\View;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
+use Illuminate\Support\Facades\Crypt;
 
 class SubmissionController extends Controller
 {
@@ -132,7 +140,7 @@ class SubmissionController extends Controller
                 // Data untuk role 'prepared'
                 $query->orWhere(function ($query) use ($user, $allowedDepartments) {
                     $query->where('id_user', $user->id)
-                          ->whereIn('id_departement', $allowedDepartments);
+                        ->whereIn('id_departement', $allowedDepartments);
                 });
             })
             ->when($roleNames->contains('Check1'), function ($query) use ($userDepartmentId) {
@@ -144,9 +152,9 @@ class SubmissionController extends Controller
                                 $roleQuery->whereIn('name', ['Check1', 'Check2', 'approved']);
                             });
                         })
-                        ->orWhereHas('approvals', function ($subQuery) {
-                            $subQuery->whereNull('status'); // Approval dengan status null
-                        });
+                            ->orWhereHas('approvals', function ($subQuery) {
+                                $subQuery->whereNull('status'); // Approval dengan status null
+                            });
                     })->where('id_departement', $userDepartmentId);
                 });
             })
@@ -155,16 +163,16 @@ class SubmissionController extends Controller
                 $query->orWhere(function ($query) use ($userDepartmentId) {
                     $query->whereHas('approvals', function ($subQuery) {
                         $subQuery->where('status', 'approved')
-                                 ->whereHas('user.roles', function ($roleQuery) {
-                                     $roleQuery->where('name', 'Check1');
-                                 });
+                            ->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->where('name', 'Check1');
+                            });
                     })
-                    ->where('id_departement', $userDepartmentId)
-                    ->whereDoesntHave('approvals', function ($subQuery) {
-                        $subQuery->whereHas('user.roles', function ($roleQuery) {
-                            $roleQuery->whereIn('name', ['Check2', 'approved']);
+                        ->where('id_departement', $userDepartmentId)
+                        ->whereDoesntHave('approvals', function ($subQuery) {
+                            $subQuery->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->whereIn('name', ['Check2', 'approved']);
+                            });
                         });
-                    });
                 });
             })
             ->when($roleNames->contains('approved'), function ($query) {
@@ -172,15 +180,15 @@ class SubmissionController extends Controller
                 $query->orWhere(function ($query) {
                     $query->whereHas('approvals', function ($subQuery) {
                         $subQuery->where('status', 'approved')
-                                 ->whereHas('user.roles', function ($roleQuery) {
-                                     $roleQuery->where('name', 'Check2');
-                                 });
+                            ->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->where('name', 'Check2');
+                            });
                     })
-                    ->whereDoesntHave('approvals', function ($subQuery) {
-                        $subQuery->whereHas('user.roles', function ($roleQuery) {
-                            $roleQuery->where('name', 'approved');
+                        ->whereDoesntHave('approvals', function ($subQuery) {
+                            $subQuery->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->where('name', 'approved');
+                            });
                         });
-                    });
                 });
             })
             ->get();
@@ -189,17 +197,88 @@ class SubmissionController extends Controller
     }
 
     // Download file PDF
-    public function download($id)
+    public function downloadWithQRCode($id)
     {
-        $submission = Submission::findOrFail($id);
+        $submission = Submission::with(['approvals.user.roles'])->findOrFail($id);
         $filePath = public_path($submission->lampiran_pdf);
 
-        if (file_exists($filePath)) {
-            return response()->download($filePath);
+        if (!file_exists($filePath)) {
+            return redirect()->back()->with('error', 'File tidak ditemukan.');
         }
 
-        return redirect()->back()->with('error', 'File tidak ditemukan.');
+        // Urutan approval
+        $approvalStages = ['prepare', 'Check1', 'Check2', 'approved'];
+
+        $approvals = [];
+        $approvalTimes = [];
+
+        // Ambil waktu prepare berdasarkan create_at submission
+        $approvals['prepare'] = $submission->user->name ?? 'Pending';
+        $approvalTimes['prepare'] = $submission->created_at ? $submission->created_at->format('d M Y H:i:s') : 'Pending';
+
+        // Ambil approval berdasarkan role yang dimiliki pengguna
+        foreach (['Check1', 'Check2', 'approved'] as $stage) {
+            $approval = $submission->approvals->first(function ($approval) use ($stage) {
+                return $approval->user->roles->pluck('name')->contains($stage);
+            });
+
+            if ($approval) {
+                $approvals[$stage] = $approval->user->name;
+                $approvalTimes[$stage] = $approval->approved_date ? $approval->approved_date->format('d M Y H:i:s') : 'Pending';
+            } else {
+                $approvals[$stage] = 'Pending';
+                $approvalTimes[$stage] = 'Pending';
+            }
+        }
+
+        // Fungsi untuk generate QR Code menggunakan Endroid QR Code
+        function generateQrCode($content)
+        {
+            return Builder::create()
+                ->writer(new PngWriter())
+                ->data(Crypt::encryptString($content))
+                ->encoding(new Encoding('UTF-8'))
+                ->size(250) // QR code lebih besar untuk profesional tampilan
+                ->margin(10)
+                ->build()
+                ->getString();
+        }
+
+        // Generate QR Codes
+        $qrCodes = [
+            'prepare'  => base64_encode(generateQrCode("Prepare: {$submission->no_transaksi} - {$approvals['prepare']} - {$approvalTimes['prepare']}")),
+            'check1'   => base64_encode(generateQrCode("Check-1: {$submission->no_transaksi} - {$approvals['Check1']} - {$approvalTimes['Check1']}")),
+            'check2'   => base64_encode(generateQrCode("Check-2: {$submission->no_transaksi} - {$approvals['Check2']} - {$approvalTimes['Check2']}")),
+            'approved' => base64_encode(generateQrCode("Approved: {$submission->no_transaksi} - {$approvals['approved']} - {$approvalTimes['approved']}")),
+        ];
+
+        // Generate halaman QR Code sebagai HTML
+        $html = View::make('pdf.qrcode', compact('submission', 'qrCodes', 'approvals', 'approvalTimes'))->render();
+
+        // Create PDF using GD instead of Imagick
+        $mpdf = new Mpdf([
+            'useGD' => true,
+            'mode' => 'utf-8',
+            'format' => 'A4',
+        ]);
+
+        $mpdf->AddPage(); 
+        $mpdf->WriteHTML($html);
+
+        $pageCount = $mpdf->SetSourceFile($filePath);
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $tplId = $mpdf->ImportPage($i);
+            $mpdf->AddPage();
+            $mpdf->UseTemplate($tplId);
+        }
+
+        // Output PDF
+        return response()->streamDownload(function () use ($mpdf) {
+            echo $mpdf->Output('', 'S');
+        }, 'approved-system-kbi.pdf');
     }
+
+
 
     public function destroy($id)
     {

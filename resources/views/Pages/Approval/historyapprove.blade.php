@@ -55,6 +55,11 @@
                                 <th scope="col" class="text-center">Check-2</th>
                                 <th scope="col" class="text-center">Approved</th>
                                 <th scope="col" class="text-center">Remark</th>
+                                @if (Auth::check() && Auth::user()->roles->isNotEmpty())
+                                    @if (Auth::user()->roles->pluck('name')->contains('viewer'))
+                                        <th scope="col" class="text-center">download</th>
+                                    @endif
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -129,6 +134,17 @@
                                     <td scope="col" class="text-center">
                                         {{ $submission->approvals->last()?->remark ?? '-' }}
                                     </td>
+                                    @if (Auth::check() && Auth::user()->roles->isNotEmpty())
+                                        @if (Auth::user()->roles->pluck('name')->contains('viewer'))
+                                            <td class="text-center">
+                                                <a href="{{ route('submissions.download', $submission->id) }}"
+                                                    class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-download"></i> Download PDF
+                                                </a>
+                                            </td>
+                                        @endif
+                                    @endif
+
                                 </tr>
                             @endforeach
 
