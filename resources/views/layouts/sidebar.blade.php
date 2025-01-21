@@ -1,7 +1,7 @@
 <aside id="sidebar" class="sidebar hiden">
     <ul class="sidebar-nav" id="sidebar-nav">
    @if (Auth::check() && Auth::user()->roles->isNotEmpty())
-        @if (Auth::user()->roles->pluck('name')->intersect(['superadmin','prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
+        @if (Auth::user()->roles->pluck('name')->intersect(['prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('submissions.index', 'submissions.create') ? 'active' : 'collapsed' }}"
                     href="{{ route('submissions.index') }}">

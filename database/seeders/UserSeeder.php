@@ -21,14 +21,9 @@ class UserSeeder extends Seeder
             'password' => Hash::make('superAdmin'),
         ]);
 
-        // // Assign role superadmin ke user SuperAdmin
-        $superAdminRole = Role::where('name', 'superadmin')->first();
-        if ($superAdminRole) {
-            $superAdmin->roles()->attach($superAdminRole->id);
-        }
 
-        // $superAdminRole = Role::whereIn('name', ['superadmin','Check1','Check2'])->pluck('id');
-        // $superAdmin->roles()->sync($superAdminRole);
+        $superAdminRole = Role::whereIn('name', ['superadmin','Check1','Check2'])->pluck('id');
+        $superAdmin->roles()->sync($superAdminRole);
 
         // // Buat user lain dengan beberapa role
         // $user = User::create([

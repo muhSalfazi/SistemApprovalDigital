@@ -47,11 +47,6 @@ class AuthController extends Controller
         return redirect()->route('users.index')->with('login-sukses', 'Login berhasil sebagai SuperAdmin!');
     }
 
-    // if (array_intersect(['superadmin', 'Check1', 'Check2'], $roles)) {
-    //     // $userRoles = implode(', ', array_map('ucfirst', array_intersect(['prepared', 'Check1', 'Check2'], $roles)));
-    //     return redirect()->route('submissions.index')->with('login-sukses', "Login berhasil sebagai superadmin!");
-    // }
-
     if (array_intersect(['prepared', 'Check1', 'Check2'], $roles)) {
         $userRoles = implode(', ', array_map('ucfirst', array_intersect(['prepared', 'Check1', 'Check2'], $roles)));
         return redirect()->route('submissions.index')->with('login-sukses', "Login berhasil sebagai {$userRoles}!");

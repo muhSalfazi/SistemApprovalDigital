@@ -131,20 +131,23 @@ class SubmissionController extends Controller
             abort(403, 'User does not have a role assigned.');
         }
 
+        // Periksa apakah user adalah superadmin
+        $isSuperAdmin = $roleNames->contains('superadmin');
+
         $userDepartmentId = $user->id_departement; // Departemen pengguna
         $allowedDepartments = [$userDepartmentId];
 
         // Query untuk menyesuaikan semua role yang dimiliki
         $submissions = Submission::with(['kategori', 'departement', 'user', 'approvals.user.roles'])
-            ->when($roleNames->contains('prepared'), function ($query) use ($user, $allowedDepartments) {
-                // Data untuk role 'prepared'
+            ->when(!$isSuperAdmin && $roleNames->contains('prepared'), function ($query) use ($user, $allowedDepartments) {
+                // Data untuk role 'prepared', hanya untuk departemen tertentu
                 $query->orWhere(function ($query) use ($user, $allowedDepartments) {
                     $query->where('id_user', $user->id)
                         ->whereIn('id_departement', $allowedDepartments);
                 });
             })
-            ->when($roleNames->contains('Check1'), function ($query) use ($userDepartmentId) {
-                // Data untuk role 'Check1'
+            ->when(!$isSuperAdmin && $roleNames->contains('Check1'), function ($query) use ($userDepartmentId) {
+                // Data untuk role 'Check1', hanya untuk departemen tertentu
                 $query->orWhere(function ($query) use ($userDepartmentId) {
                     $query->where(function ($query) use ($userDepartmentId) {
                         $query->whereDoesntHave('approvals', function ($subQuery) {
@@ -152,14 +155,14 @@ class SubmissionController extends Controller
                                 $roleQuery->whereIn('name', ['Check1', 'Check2', 'approved']);
                             });
                         })
-                            ->orWhereHas('approvals', function ($subQuery) {
-                                $subQuery->whereNull('status'); // Approval dengan status null
-                            });
+                        ->orWhereHas('approvals', function ($subQuery) {
+                            $subQuery->whereNull('status'); // Approval dengan status null
+                        });
                     })->where('id_departement', $userDepartmentId);
                 });
             })
-            ->when($roleNames->contains('Check2'), function ($query) use ($userDepartmentId) {
-                // Data untuk role 'Check2'
+            ->when(!$isSuperAdmin && $roleNames->contains('Check2'), function ($query) use ($userDepartmentId) {
+                // Data untuk role 'Check2', hanya untuk departemen tertentu
                 $query->orWhere(function ($query) use ($userDepartmentId) {
                     $query->whereHas('approvals', function ($subQuery) {
                         $subQuery->where('status', 'approved')
@@ -167,16 +170,16 @@ class SubmissionController extends Controller
                                 $roleQuery->where('name', 'Check1');
                             });
                     })
-                        ->where('id_departement', $userDepartmentId)
-                        ->whereDoesntHave('approvals', function ($subQuery) {
-                            $subQuery->whereHas('user.roles', function ($roleQuery) {
-                                $roleQuery->whereIn('name', ['Check2', 'approved']);
-                            });
+                    ->where('id_departement', $userDepartmentId)
+                    ->whereDoesntHave('approvals', function ($subQuery) {
+                        $subQuery->whereHas('user.roles', function ($roleQuery) {
+                            $roleQuery->whereIn('name', ['Check2', 'approved']);
                         });
+                    });
                 });
             })
-            ->when($roleNames->contains('approved'), function ($query) {
-                // Data untuk role 'approved'
+            ->when(!$isSuperAdmin && $roleNames->contains('approved'), function ($query) {
+                // Data untuk role 'approved', hanya untuk departemen tertentu
                 $query->orWhere(function ($query) {
                     $query->whereHas('approvals', function ($subQuery) {
                         $subQuery->where('status', 'approved')
@@ -184,17 +187,22 @@ class SubmissionController extends Controller
                                 $roleQuery->where('name', 'Check2');
                             });
                     })
-                        ->whereDoesntHave('approvals', function ($subQuery) {
-                            $subQuery->whereHas('user.roles', function ($roleQuery) {
-                                $roleQuery->where('name', 'approved');
-                            });
+                    ->whereDoesntHave('approvals', function ($subQuery) {
+                        $subQuery->whereHas('user.roles', function ($roleQuery) {
+                            $roleQuery->where('name', 'approved');
                         });
+                    });
                 });
+            })
+            ->when($isSuperAdmin, function ($query) {
+                // Jika superadmin, tampilkan semua data tanpa batasan departemen
+                $query->orWhereNotNull('id');
             })
             ->get();
 
         return view('Pages.Approval.index-approval', compact('submissions', 'roleNames'));
     }
+
 
     // Download file PDF
     public function downloadWithQRCode($id)
@@ -262,7 +270,7 @@ class SubmissionController extends Controller
             'format' => 'A4',
         ]);
 
-        $mpdf->AddPage(); 
+        $mpdf->AddPage();
         $mpdf->WriteHTML($html);
 
         $pageCount = $mpdf->SetSourceFile($filePath);

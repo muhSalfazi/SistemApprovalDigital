@@ -5,68 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Approval QR Codes</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
             background-color: #f4f4f4;
             color: #333;
             padding: 30px;
         }
+
+        .logo {
+            width: 200px;
+            margin: 0 auto 20px;
+            display: block;
+        }
+
         .container {
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             margin: 50px auto;
-            background-color: #fff;
+            background: linear-gradient(to right, #ffffff, #f8f9fa);
             padding: 50px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
+
         h2 {
-            font-size: 28px;
+            font-size: 32px;
             color: #2c3e50;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            font-weight: 600;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
+
         th {
-            background-color: #3498db;
+            background-color: #007bff;
             color: #fff;
-            padding: 15px;
-            font-size: 18px;
+            padding: 20px;
+            font-size: 20px;
             text-transform: uppercase;
+            font-weight: 600;
+            border-radius: 5px;
         }
+
         td {
             border: 1px solid #ddd;
-            padding: 15px;
+            padding: 20px;
             background-color: #ecf0f1;
             text-align: center;
+            border-radius: 5px;
+            transition: all 0.3s ease;
         }
-        img {
-            width: 200px;
-            height: 200px;
+
+        td:hover {
+            background-color: #dfe6e9;
+        }
+
+        img.qr-code {
+            width: 180px;
+            height: 180px;
             border-radius: 10px;
-            border: 5px solid #3498db;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
-        img:hover {
+
+        img.qr-code:hover {
             transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
+
         .footer {
-            margin-top: 30px;
-            font-size: 14px;
+            margin-top: 40px;
+            font-size: 16px;
             color: #7f8c8d;
+            font-weight: 400;
         }
+
         .label {
             font-weight: bold;
             color: #2c3e50;
+            font-size: 18px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <img src="{{ asset('assets/img/kyoraku-baru.png') }}" alt="Company Logo" class="logo">
         <h2>Approval QR Codes</h2>
         <table>
             <tr>
@@ -77,25 +108,25 @@
             </tr>
             <tr>
                 <td>
-                    <img src="data:image/png;base64,{{ $qrCodes['prepare'] }}" alt="Prepare QR">
+                    <img class="qr-code" src="data:image/png;base64,{{ $qrCodes['prepare'] }}" alt="Prepare QR">
                     <p class="label">Prepared By:</p>
                     <p>{{ $approvals['prepare'] }}</p>
                     <p>{{ $approvalTimes['prepare'] }}</p>
                 </td>
                 <td>
-                    <img src="data:image/png;base64,{{ $qrCodes['check1'] }}" alt="Check-1 QR">
+                    <img class="qr-code" src="data:image/png;base64,{{ $qrCodes['check1'] }}" alt="Check-1 QR">
                     <p class="label">Checked By:</p>
                     <p>{{ $approvals['Check1'] }}</p>
                     <p>{{ $approvalTimes['Check1'] }}</p>
                 </td>
                 <td>
-                    <img src="data:image/png;base64,{{ $qrCodes['check2'] }}" alt="Check-2 QR">
+                    <img class="qr-code" src="data:image/png;base64,{{ $qrCodes['check2'] }}" alt="Check-2 QR">
                     <p class="label">Checked By:</p>
                     <p>{{ $approvals['Check2'] }}</p>
                     <p>{{ $approvalTimes['Check2'] }}</p>
                 </td>
                 <td>
-                    <img src="data:image/png;base64,{{ $qrCodes['approved'] }}" alt="Approved QR">
+                    <img class="qr-code" src="data:image/png;base64,{{ $qrCodes['approved'] }}" alt="Approved QR">
                     <p class="label">Approved By:</p>
                     <p>{{ $approvals['approved'] }}</p>
                     <p>{{ $approvalTimes['approved'] }}</p>
@@ -103,7 +134,7 @@
             </tr>
         </table>
         <div class="footer">
-            &copy; {{ date('Y') }} - Approval QR System | All Rights Reserved.
+            &copy; {{ date('Y') }} - HRGA System | All Rights Reserved.
         </div>
     </div>
 </body>

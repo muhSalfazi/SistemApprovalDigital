@@ -38,7 +38,7 @@
                                 <th scope="col" class="text-center">Attachment</th>
                                 <th scope="col" class="text-center">Prepare</th>
                                 <th scope="col" class="text-center">Date Submission</th>
-                              <th scope="col" class="text-center">Aksi</th>
+                                <th scope="col" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -51,59 +51,64 @@
                                     <td>{{ $submission->remark }}</td>
                                     <td>
                                         @if (Auth::check() &&
-                                        Auth::user()->roles->pluck('name')->intersect(['superadmin', 'prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
-                                        @if ($submission->approvals->last())
-                                            @php
-                                                $lastApproval = $submission->approvals->last();
-                                                $status = $lastApproval->status ?? 'Pending';
+                                                Auth::user()->roles->pluck('name')->intersect(['superadmin', 'prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
+                                            @if ($submission->approvals->last())
+                                                @php
+                                                    $lastApproval = $submission->approvals->last();
+                                                    $status = $lastApproval->status ?? 'Pending';
 
-                                                // Daftar role dengan prioritas tertinggi ke terendah
-                                                $rolePriorities = ['approved', 'Check2', 'Check1', 'prepared'];
+                                                    // Daftar role dengan prioritas tertinggi ke terendah
+                                                    $rolePriorities = ['approved', 'Check2', 'Check1', 'prepared'];
 
-                                                // Ambil role pengguna yang sesuai dengan prioritas tertinggi
-                                                $userRoles = $lastApproval->user->roles->pluck('name')->toArray();
-                                                $highestRole = collect($rolePriorities)->first(function ($role) use ($userRoles) {
-                                                    return in_array($role, $userRoles);
-                                                }) ?? 'Unknown';
+                                                    // Ambil role pengguna yang sesuai dengan prioritas tertinggi
+                                                    $userRoles = $lastApproval->user->roles->pluck('name')->toArray();
+                                                    $highestRole =
+                                                        collect($rolePriorities)->first(function ($role) use (
+                                                            $userRoles,
+                                                        ) {
+                                                            return in_array($role, $userRoles);
+                                                        }) ?? 'Unknown';
 
-                                                $approvalDate = $lastApproval->approved_date
-                                                    ? \Carbon\Carbon::parse($lastApproval->approved_date)->format('d M Y H:i:s')
-                                                    : 'N/A';
+                                                    $approvalDate = $lastApproval->approved_date
+                                                        ? \Carbon\Carbon::parse($lastApproval->approved_date)->format(
+                                                            'd M Y H:i:s',
+                                                        )
+                                                        : 'N/A';
 
-                                                // Tentukan teks status
-                                                $statusText = match (true) {
-                                                    $status === 'approved' => 'Approved by ' . ucfirst($highestRole),
-                                                    $status === 'rejected' => 'Rejected',
-                                                    default => 'Pending',
-                                                };
+                                                    // Tentukan teks status
+                                                    $statusText = match (true) {
+                                                        $status === 'approved' => 'Approved by ' .
+                                                            ucfirst($highestRole),
+                                                        $status === 'rejected' => 'Rejected',
+                                                        default => 'Pending',
+                                                    };
 
-                                                // Tentukan kelas badge berdasarkan status
-                                                $badgeClass = match (true) {
-                                                    $status === 'approved' => 'bg-success',
-                                                    $status === 'rejected' => 'bg-danger',
-                                                    default => 'bg-secondary',
-                                                };
-                                            @endphp
+                                                    // Tentukan kelas badge berdasarkan status
+                                                    $badgeClass = match (true) {
+                                                        $status === 'approved' => 'bg-success',
+                                                        $status === 'rejected' => 'bg-danger',
+                                                        default => 'bg-secondary',
+                                                    };
+                                                @endphp
 
-                                            <span class="badge {{ $badgeClass }}"
-                                                title="Last approval by {{ ucfirst($highestRole) }}">
-                                                {{ $statusText }}
-                                            </span>
-                                            <br>
-                                            <small class="text-muted">Date: {{ $approvalDate }}</small>
-                                        @else
-                                            <span class="badge bg-secondary">Pending</span>
+                                                <span class="badge {{ $badgeClass }}"
+                                                    title="Last approval by {{ ucfirst($highestRole) }}">
+                                                    {{ $statusText }}
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">Date: {{ $approvalDate }}</small>
+                                            @else
+                                                <span class="badge bg-secondary">Pending</span>
+                                            @endif
                                         @endif
-                                    @endif
                                     </td>
                                     @if (Auth::check() && Auth::user()->roles->isNotEmpty())
-                                        @if (Auth::user()->roles->pluck('name')->intersect(['superadmin','prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
+                                        @if (Auth::user()->roles->pluck('name')->intersect(['superadmin', 'prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
                                             <td>
                                                 <button class="btn btn-info btn-sm"
                                                     onclick="openApprovalModal({{ $submission->id }}, '{{ asset($submission->lampiran_pdf) }}')">
                                                     <i class="bi bi-eye"></i> View
                                                 </button>
-
                                             </td>
                                         @endif
                                         </td>
@@ -173,24 +178,30 @@
                     }
 
                     .pdf-container {
-                        height: 500px;
+                        height: 80vh;
+                        /* Sesuaikan tinggi ke viewport */
                         overflow-y: auto;
+                        /* Tambahkan scroll jika kontennya panjang */
                         background-color: #f8f9fa;
                         border: 1px solid #ddd;
+                        padding: 20px;
                         display: flex;
-                        justify-content: center;
+                        flex-direction: column;
                         align-items: center;
                     }
 
                     .pdf-container canvas {
-                        width: 100%;
-                        height: auto;
-                        border-radius: 5px;
+                        margin-bottom: 20px;
+                        /* Beri jarak antar halaman */
+                        border: 1px solid #ccc;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
                     }
+
 
                     @media (max-width: 768px) {
                         .pdf-container {
-                            height: 400px;
+                            height: 80vh;
+                            /* Sesuaikan tinggi pada layar kecil */
                         }
                     }
                 </style>
@@ -364,6 +375,7 @@
                     }
 
                     // Fungsi untuk merender PDF menggunakan PDF.js
+                    // Fungsi untuk merender PDF menggunakan PDF.js
                     function renderPDF(pdfPath) {
                         const container = document.getElementById('pdfViewerContainer');
                         if (!container) {
@@ -373,30 +385,39 @@
 
                         container.innerHTML = ''; // Kosongkan sebelum render
 
-                        const loadingTask = pdfjsLib.getDocument(pdfPath);
-                        loadingTask.promise.then((pdf) => {
-                            pdf.getPage(1).then((page) => {
-                                const viewport = page.getViewport({
-                                    scale: 1.5
+                        pdfjsLib.getDocument(pdfPath).promise.then((pdf) => {
+                            const totalPages = pdf.numPages;
+
+                            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                                pdf.getPage(pageNum).then((page) => {
+                                    const viewport = page.getViewport({
+                                        scale: 1.2
+                                    });
+                                    const canvas = document.createElement('canvas');
+                                    const context = canvas.getContext('2d');
+
+                                    canvas.height = viewport.height;
+                                    canvas.width = viewport.width;
+
+                                    container.appendChild(canvas); // Tambahkan canvas ke container
+
+                                    const renderContext = {
+                                        canvasContext: context,
+                                        viewport: viewport,
+                                    };
+
+                                    page.render(renderContext).promise.then(() => {
+                                        console.log(`Halaman ${pageNum} selesai dirender.`);
+                                    });
                                 });
-                                const canvas = document.createElement('canvas');
-                                const context = canvas.getContext('2d');
-                                canvas.height = viewport.height;
-                                canvas.width = viewport.width;
-
-                                container.appendChild(canvas);
-
-                                const renderContext = {
-                                    canvasContext: context,
-                                    viewport: viewport,
-                                };
-                                page.render(renderContext);
-                            });
+                            }
                         }).catch((error) => {
                             console.error('Error loading PDF:', error);
                             container.innerHTML = '<p class="text-danger">Unable to load PDF.</p>';
                         });
                     }
+
+
 
                     // Fungsi untuk submit persetujuan
                     function submitApproval() {
