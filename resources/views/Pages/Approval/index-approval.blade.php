@@ -191,17 +191,19 @@
                     }
 
                     .pdf-container canvas {
-                        margin-bottom: 20px;
-                        /* Beri jarak antar halaman */
-                        border: 1px solid #ccc;
+                        width: 100% !important;
+                        /* Pastikan PDF menyesuaikan lebar */
+                        height: auto !important;
+                        max-width: 100%;
+                        border: none;
                         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
                     }
 
 
                     @media (max-width: 768px) {
                         .pdf-container {
-                            height: 80vh;
-                            /* Sesuaikan tinggi pada layar kecil */
+                            height: 60vh;
+                            padding: 5px;
                         }
                     }
                 </style>

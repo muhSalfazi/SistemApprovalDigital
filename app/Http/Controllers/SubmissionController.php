@@ -203,7 +203,6 @@ class SubmissionController extends Controller
         return view('Pages.Approval.index-approval', compact('submissions', 'roleNames'));
     }
 
-
     // Download file PDF
     public function downloadWithQRCode($id)
     {
@@ -281,12 +280,13 @@ class SubmissionController extends Controller
         }
 
         // Output PDF
-        return response()->streamDownload(function () use ($mpdf) {
-            echo $mpdf->Output('', 'S');
-        }, 'approved-system-kbi.pdf');
+        return response($mpdf->Output('', 'S'))
+        ->header('Content-Type', 'application/pdf')
+        ->header('Content-Disposition', 'inline; filename="approved-system-kbi.pdf"')
+        ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
+        ->header('Pragma', 'public');
+
     }
-
-
 
     public function destroy($id)
     {

@@ -12,23 +12,26 @@ class ApprovalController extends Controller
         $user = auth()->user();
         $roleNames = $user->roles->pluck('name'); // Ambil semua role user sebagai koleksi
 
-        // Ambil data submission dengan approval terkait
+        // Cek apakah user memiliki role superadmin
+        $isSuperAdmin = $roleNames->contains('superadmin');
+
         $submissions = Submission::with(['approvals.user.roles', 'user', 'departement'])
-            ->when($roleNames->contains('prepared'), function ($query) use ($user) {
-                $query->where('id_user', $user->id); // Filter berdasarkan user logged-in
-            })
-            ->when($roleNames->contains('viewer'), function ($query) {
-                $query->whereHas('approvals', function ($subQuery) {
-                    $subQuery->whereHas('user.roles', function ($roleQuery) {
-                        $roleQuery->where('name', 'approved'); // Pastikan submission telah disetujui
-                    })->where('status', 'approved'); // Status approval harus 'approved'
-                });
-            })
+            ->when(!$isSuperAdmin, function ($query) use ($user, $roleNames) {
+                $query->when($roleNames->contains('prepared'), function ($query) use ($user) {
+                    $query->where('id_user', $user->id); // Filter berdasarkan user logged-in
+                })
+                    ->when($roleNames->contains('viewer'), function ($query) {
+                        $query->whereHas('approvals', function ($subQuery) {
+                            $subQuery->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->where('name', 'approved'); // Pastikan submission telah disetujui
+                            })->where('status', 'approved'); // Status approval harus 'approved'
+                        });
+                    });
+            }) // Jika superadmin, tidak ada filter tambahan
             ->get();
 
         return view('Pages.Approval.historyapprove', compact('submissions', 'roleNames'));
     }
-
 
 
     public function store(Request $request)
@@ -69,33 +72,8 @@ class ApprovalController extends Controller
         $user = auth()->user();
         $userRoles = $user->roles->pluck('name')->toArray(); // Ambil semua role pengguna
 
-        // Urutan role untuk approval (superadmin bisa akses semua)
+        // Urutan role untuk approval
         $requiredApprovalOrder = ['Check1', 'Check2', 'approved'];
-
-        // Periksa apakah user memiliki superadmin
-        if (in_array('superadmin', $userRoles)) {
-            $userRole = 'superadmin';
-            $currentRoleIndex = -1; // Superadmin bisa approve kapan saja
-        } else {
-            // Temukan semua role pengguna dalam urutan approval
-            $matchingRoles = array_intersect($requiredApprovalOrder, $userRoles);
-
-            // Jika tidak ada role yang cocok, larang akses
-            if (empty($matchingRoles)) {
-                return response()->json([
-                    'userRole' => null,
-                    'existingApproval' => false,
-                    'canApprove' => false,
-                ]);
-            }
-
-            // Ambil role dengan prioritas tertinggi
-            $userRole = collect($requiredApprovalOrder)->first(function ($role) use ($matchingRoles) {
-                return in_array($role, $matchingRoles);
-            });
-
-            $currentRoleIndex = array_search($userRole, $requiredApprovalOrder);
-        }
 
         // Ambil semua approval yang sudah dilakukan pada submission ini
         $existingApprovals = Approval::where('id_submission', $submissionId)
@@ -107,6 +85,42 @@ class ApprovalController extends Controller
                 return $approval->user->roles->pluck('name')->first();
             });
 
+        // Pastikan user belum melakukan approval dengan role yang sama sebelumnya
+        $roleAlreadyApproved = false;
+        foreach ($userRoles as $role) {
+            if ($existingApprovals->has($role)) {
+                $roleAlreadyApproved = true;
+                break;
+            }
+        }
+
+        // Periksa apakah user adalah superadmin dan sudah approve sebelumnya
+        $superAdminApproved = false;
+        if (in_array('superadmin', $userRoles)) {
+            $superAdminApproved = Approval::where('id_submission', $submissionId)
+                ->where('auditor_id', $user->id)
+                ->exists();
+        }
+
+        // Temukan semua role pengguna dalam urutan approval
+        $matchingRoles = array_intersect($requiredApprovalOrder, $userRoles);
+
+        // Jika tidak ada role yang cocok, larang akses
+        if (empty($matchingRoles)) {
+            return response()->json([
+                'userRole' => null,
+                'existingApproval' => false,
+                'canApprove' => false,
+            ]);
+        }
+
+        // Ambil role dengan prioritas tertinggi yang dimiliki pengguna
+        $userRole = collect($requiredApprovalOrder)->first(function ($role) use ($matchingRoles) {
+            return in_array($role, $matchingRoles);
+        });
+
+        $currentRoleIndex = array_search($userRole, $requiredApprovalOrder);
+
         // Cek apakah semua tahap sebelum current role sudah disetujui
         $allPreviousApproved = true;
         for ($i = 0; $i < $currentRoleIndex; $i++) {
@@ -117,23 +131,19 @@ class ApprovalController extends Controller
             }
         }
 
-        // Pastikan user belum melakukan approval dengan role yang sama sebelumnya
-        $roleAlreadyApproved = false;
-        foreach ($userRoles as $role) {
-            if ($existingApprovals->has($role)) {
-                $roleAlreadyApproved = true;
-                break;
-            }
-        }
-
         // Cek apakah approval tertinggi sudah dilakukan oleh pengguna lain
         $highestApprovalExists = $existingApprovals->has(end($requiredApprovalOrder));
 
         // Form hanya muncul jika semua approval sebelumnya selesai dan pengguna belum approve untuk tahap ini
-        $canApprove = ($currentRoleIndex === -1 || $allPreviousApproved) && !$roleAlreadyApproved;
+        $canApprove = $allPreviousApproved && !$roleAlreadyApproved;
 
-        // Jika tahap tertinggi sudah disetujui, izinkan untuk superadmin jika belum approve
-        if ($highestApprovalExists && !$roleAlreadyApproved) {
+        // Superadmin hanya bisa approve sekali
+        if (in_array('superadmin', $userRoles) && $superAdminApproved) {
+            $canApprove = false;
+        }
+
+        // Pastikan pengguna dengan role "approved" tetap bisa melakukan approval jika belum melakukannya
+        if (in_array('approved', $userRoles) && !$existingApprovals->has('approved')) {
             $canApprove = true;
         }
 
@@ -143,8 +153,6 @@ class ApprovalController extends Controller
             'canApprove' => $canApprove,
         ]);
     }
-
-
 
     public function getApprovalTable($submissionId)
     {
@@ -200,8 +208,5 @@ class ApprovalController extends Controller
             ], 500);
         }
     }
-
-
-
 
 }

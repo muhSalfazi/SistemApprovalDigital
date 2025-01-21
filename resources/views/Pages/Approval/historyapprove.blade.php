@@ -56,7 +56,7 @@
                                 <th scope="col" class="text-center">Approved</th>
                                 <th scope="col" class="text-center">Remark</th>
                                 @if (Auth::check() && Auth::user()->roles->isNotEmpty())
-                                    @if (Auth::user()->roles->pluck('name')->contains('viewer'))
+                                @if (Auth::user()->roles->pluck('name')->intersect(['superadmin','viewer'])->isNotEmpty())
                                         <th scope="col" class="text-center">download</th>
                                     @endif
                                 @endif
@@ -135,7 +135,7 @@
                                         {{ $submission->approvals->last()?->remark ?? '-' }}
                                     </td>
                                     @if (Auth::check() && Auth::user()->roles->isNotEmpty())
-                                        @if (Auth::user()->roles->pluck('name')->contains('viewer'))
+                                    @if (Auth::user()->roles->pluck('name')->intersect(['superadmin','viewer'])->isNotEmpty())
                                             <td class="text-center">
                                                 <a href="{{ route('submissions.download', $submission->id) }}"
                                                     class="btn btn-primary btn-sm">
