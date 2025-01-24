@@ -29,13 +29,13 @@
     <link href="{{ asset('assets/vendor/quill/quill.bubble.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/remixicon/remixicon.css') }}" rel="stylesheet">
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
     <!-- Template Main CSS File -->
     <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Animate.css -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+
 
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -76,59 +76,132 @@
 
     .table-responsive {
         overflow-x: auto;
-        margin-top: 20px;
-        /* Menambahkan margin atas untuk estetika */
+        margin-top: 15px;
+        border-radius: 4px;
     }
 
+    /* Tabel styling untuk tampilan yang lebih profesional */
     .table {
         border-collapse: collapse;
         width: 100%;
-        /* Memastikan tabel mengisi ruang */
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        /* Menambahkan bayangan pada tabel */
+        font-size: 0.775rem;
+        /* Ukuran font lebih kecil */
+        border: 1px solid #dee2e6;
+        /* Border tabel lebih halus */
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        /* Bayangan tabel */
     }
 
     .table th,
     .table td {
         vertical-align: middle;
-        padding: 15px;
-        /* Menambahkan padding untuk ruang di dalam sel */
+        padding: 7px;
+        /* Padding dikurangi untuk tampilan lebih ringkas */
         text-align: center;
-        /* Memastikan teks rata tengah */
-        transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
-        /* Efek transisi yang lebih halus */
-    }
-
-    .table tr {
-        transition: background-color 0.3s;
-        /* Menambahkan transisi untuk baris */
-    }
-
-    .table tr:hover {
-        background-color: #007bff;
-        /* Warna latar belakang saat hover */
-        color: white;
-        /* Mengubah warna teks menjadi putih saat hover */
-        transform: scale(1.02);
-        /* Memberikan efek zoom sedikit saat hover */
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        /* Menambahkan bayangan saat hover */
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
     }
 
     .table th {
-        background-color: #fc5e5e;
-        /* Warna gelap untuk header */
-        color: white;
-        /* Warna teks header */
+        background-color: #343a40;
+        /* Warna latar belakang header yang lebih profesional */
+        color: #ffffff;
         font-weight: bold;
         text-transform: uppercase;
-        /* Mengubah teks header menjadi huruf kapital */
+        letter-spacing: 0.02em;
+        font-size: 0.7rem;
     }
 
-    /* Gaya untuk tabel striping */
+    .table td {
+        background-color: #f8f9fa;
+        /* Latar belakang sel yang lebih lembut */
+        color: #212529;
+    }
+
+    /* Efek hover pada baris tabel */
+    .table tbody tr:hover {
+        background-color: #007bff;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Tabel bergaris (striped) untuk memudahkan pembacaan */
     .table-striped tbody tr:nth-of-type(odd) {
-        background-color: #f2f2f2;
-        /* Warna striping */
+        background-color: #e9ecef;
+    }
+
+    .table-striped tbody tr:nth-of-type(even) {
+        background-color: #ffffff;
+    }
+
+
+    /* Responsif untuk layar kecil */
+    @media (max-width: 768px) {
+        .table td {
+            font-size: 0.75rem;
+            /* Ukuran font lebih kecil untuk layar kecil */
+        }
+        .table th {
+        font-size: 0.65rem;
+    }
+
+        .table th,
+        .table td {
+            padding: 8px;
+        }
+    }
+
+    /* Responsif untuk layar besar */
+    @media (min-width: 1920px) {
+        .table {
+            font-size: 1rem;
+        }
+
+        .table th,
+        .table td {
+            padding: 9px;
+        }
+    }
+
+    /* Efek animasi hover */
+    .table-hover tbody tr:hover {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    /* Gaya loader */
+    .loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .loading.hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    /* Loader Animation */
+    .pl {
+        width: 4em;
+        height: 4em;
+    }
+
+    /* Ring animations */
+    .pl__ring {
+        animation: ringA 2s linear infinite;
+        stroke-width: 4;
+        stroke-linecap: round;
     }
 
     .loading {
@@ -426,12 +499,8 @@
     <script src="{{ asset('assets/vendor/tinymce/tinymce.min.js') }}"></script>
     <!-- Template Main JS File -->
     <script src="{{ asset('assets/js/main.js') }}"></script>
-    <!-- CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-
     <!-- JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -460,7 +529,7 @@
             });
         }
     </script>
-    
+
     {{-- sweet alert login sukses --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script>
@@ -479,7 +548,6 @@
                 },
             });
         @endif
-
     </script>
 
 </body>

@@ -59,10 +59,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'RFID',
         'role_id',
         'last_login',
         'IDcard',
-        'id_departement'
+        'id_departement',
+        'id_kategori'
     ];
 
     /**
@@ -99,4 +101,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Submission::class, 'id_user');
     }
+
+    public function Kategori(){
+        return $this->belongsTo(Kategori::class, 'id_kategori');
+    }
+
+    
 }

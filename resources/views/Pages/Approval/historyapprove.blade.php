@@ -3,11 +3,11 @@
 @section('title', 'Approval List')
 
 @section('content')
-    <div class="pagetitle">
+    <div class="pagetitle animate__animated animate__fadeInLeft">
         <h1>Approval List</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item active">Approvals</li>
+                <li class="breadcrumb-item active ">Approvals</li>
             </ol>
         </nav>
     </div>
@@ -43,8 +43,8 @@
     <section class="section">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">List of Approvals</h5>
-                <div class="table-responsive">
+                <h5 class="card-title animate__animated animate__fadeInLeft">List of Approvals</h5>
+                <div class="table-responsive animate__animated animate__fadeInUp">
                     <table class="table table-bordered datatable">
                         <thead>
                             <tr>
@@ -56,7 +56,7 @@
                                 <th scope="col" class="text-center">Approved</th>
                                 <th scope="col" class="text-center">Remark</th>
                                 @if (Auth::check() && Auth::user()->roles->isNotEmpty())
-                                @if (Auth::user()->roles->pluck('name')->intersect(['superadmin','viewer'])->isNotEmpty())
+                                    @if (Auth::user()->roles->pluck('name')->intersect(['superadmin', 'viewer'])->isNotEmpty())
                                         <th scope="col" class="text-center">download</th>
                                     @endif
                                 @endif
@@ -72,7 +72,8 @@
                                     <td scope="col" class="text-center">
                                         {{ $submission->user->name ?? 'Unknown' }}<br>
                                         {{ $submission->created_at->format('d M Y H:i:s') }}<br>
-                                        <span class="badge bg-info">Submitted</span>
+                                        <span class="badge bg-info "
+                                            style="font-size: 0.775rem; padding: 3px 8px;">Submitted</span>
                                     </td>
 
                                     <!-- Check-1 -->
@@ -86,11 +87,13 @@
                                             {{ $check1Approval->user->name ?? 'Unknown' }}<br>
                                             {{ $check1Approval->approved_date ? \Carbon\Carbon::parse($check1Approval->approved_date)->format('d M Y H:i:s') : 'N/A' }}
                                             <span
-                                                class="badge bg-{{ $check1Approval->status === 'approved' ? 'success' : 'danger' }}">
+                                                class="badge bg-{{ $check1Approval->status === 'approved' ? 'success' : 'danger' }}"
+                                                style="font-size: 0.775rem; padding: 3px 8px;">
                                                 {{ ucfirst($check1Approval->status) }}
                                             </span>
                                         @else
-                                            <span class="badge bg-secondary">Pending</span>
+                                            <span class="badge bg-secondary"
+                                                style="font-size: 0.775rem; padding: 3px 8px;">Pending</span>
                                         @endif
                                     </td>
 
@@ -105,11 +108,13 @@
                                             {{ $check2Approval->user->name ?? 'Unknown' }}<br>
                                             {{ $check2Approval->approved_date ? \Carbon\Carbon::parse($check2Approval->approved_date)->format('d M Y H:i:s') : 'N/A' }}
                                             <span
-                                                class="badge bg-{{ $check2Approval->status === 'approved' ? 'success' : 'danger' }}">
+                                                class="badge bg-{{ $check2Approval->status === 'approved' ? 'success' : 'danger' }}"
+                                                style="font-size: 0.775rem; padding: 3px 8px;">
                                                 {{ ucfirst($check2Approval->status) }}
                                             </span>
                                         @else
-                                            <span class="badge bg-secondary">Pending</span>
+                                            <span class="badge bg-secondary"
+                                                style="font-size: 0.775rem; padding: 3px 8px;">Pending</span>
                                         @endif
                                     </td>
 
@@ -124,21 +129,25 @@
                                             {{ $approvedApproval->user->name ?? 'Unknown' }}<br>
                                             {{ $approvedApproval->approved_date ? \Carbon\Carbon::parse($approvedApproval->approved_date)->format('d M Y H:i:s') : 'N/A' }}
                                             <span
-                                                class="badge bg-{{ $approvedApproval->status === 'approved' ? 'success' : 'danger' }}">
+                                                class="badge bg-{{ $approvedApproval->status === 'approved' ? 'success' : 'danger' }}"
+                                                style="font-size: 0.775rem; padding: 3px 8px;">
                                                 {{ ucfirst($approvedApproval->status) }}
                                             </span>
                                         @else
-                                            <span class="badge bg-secondary">Pending</span>
+                                            <span class="badge bg-secondary"
+                                                style="font-size: 0.775rem; padding: 3px 8px;">Pending</span>
                                         @endif
                                     </td>
                                     <td scope="col" class="text-center">
                                         {{ $submission->approvals->last()?->remark ?? '-' }}
                                     </td>
                                     @if (Auth::check() && Auth::user()->roles->isNotEmpty())
-                                    @if (Auth::user()->roles->pluck('name')->intersect(['superadmin','viewer'])->isNotEmpty())
+                                        @if (Auth::user()->roles->pluck('name')->intersect(['superadmin', 'viewer'])->isNotEmpty())
                                             <td class="text-center">
                                                 <a href="{{ route('submissions.download', $submission->id) }}"
-                                                    class="btn btn-primary btn-sm">
+                                                    class="btn btn-primary btn-sm"
+                                                    style="font-size: 0.775rem; padding: 3px 8px;" target="_blank"
+                                                    rel="noopener noreferrer">
                                                     <i class="bi bi-download"></i> Download PDF
                                                 </a>
                                             </td>

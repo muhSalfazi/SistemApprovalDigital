@@ -3,7 +3,7 @@
 @section('title', 'Data Users')
 
 @section('content')
-    <div class="pagetitle">
+    <div class="pagetitle animate__animated animate__fadeInLeft">
         <h1>Data Users</h1>
         <nav>
             <ol class="breadcrumb">
@@ -30,19 +30,22 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Data Users</h5>
+                        <h5 class="card-title animate__animated animate__fadeInLeft">Data Users</h5>
                         <div class="mb-3">
-                            <a href="{{ route('users.create') }}" class="btn btn-primary"><i class="bi bi-plus-square">
+                            <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm"><i
+                                    class="bi bi-plus-square">
                                     Create New User</i></a>
                         </div>
 
-                        <div class="table-responsive">
+                        <div class="table-responsive animate__animated animate__fadeInUp">
                             <table class="table table-striped table-bordered datatable">
                                 <thead class="thead-light">
                                     <tr>
                                         <th scope="col" class="text-center">NO</th>
                                         <th scope="col" class="text-center">Bagian</th>
+                                        <th scope="col" class="text-center">Kategori Akses</th>
                                         <th scope="col" class="text-center">Id-Card</th>
+                                        <th scope="col" class="text-center">RFID</th>
                                         <th scope="col" class="text-center">Nama</th>
                                         <th scope="col" class="text-center">Email</th>
                                         <th scope="col" class="text-center">Role</th>
@@ -55,7 +58,9 @@
                                         <tr>
                                             <td class="text-center">{{ $loop->iteration }}</td>
                                             <td class="text-center">{{ $user->departement->nama_departement ?? '-' }}</td>
+                                            <td class="text-center">{{ $user->Kategori->alias_name ?? '-' }}</td>
                                             <td class="text-center">{{ $user->IDcard }}</td>
+                                            <td class="text-center">{{ $user->RFID }}</td>
                                             <td class="text-center">{{ $user->name }}</td>
                                             <td class="text-center">{{ $user->email }}</td>
                                             <td class="text-center">{{ $user->roles->pluck('name')->implode(', ') }}</td>
@@ -69,16 +74,19 @@
                                             </td>
                                             <td class="text-center">
                                                 <!-- Tombol Edit -->
-                                                <button class="btn btn-success  btn-sm mt-1"
+                                                <button class="btn btn-success btn-sm mb-1"
+                                                    style="font-size: 0.775rem; padding: 3px 8px;"
                                                     onclick="editUser({{ $user->id }})">
                                                     <i class="bi bi-pencil-square"></i> Edit User
                                                 </button>
+
                                                 <form action="{{ route('users.destroy', $user) }}" method="POST"
                                                     id="delete-form-{{ $user->id }}" style="display:inline;">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button" onclick="confirmDelete({{ $user->id }})"
-                                                        class="btn btn-danger btn-sm mt-2">
+                                                        class="btn btn-danger btn-sm "
+                                                        style="font-size: 0.775rem; padding: 3px 8px;">
                                                         <i class="bi bi-trash3"></i> Delete
                                                     </button>
                                                 </form>
@@ -93,7 +101,7 @@
             </div>
         </div>
         <!-- Modal -->
-        <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal fade animate__animated animate__fadeInDown" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <form id="editUserForm" method="POST" action="">

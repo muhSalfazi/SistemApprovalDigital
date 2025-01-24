@@ -1,0 +1,68 @@
+<?php
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
+use App\Models\Submission;
+
+class QRCodeController extends Controller
+{
+    public function showqr()
+    {
+        return view('auth.validasi-qrcode');
+    }
+
+    public function validateQRCode(Request $request)
+    {
+        $request->validate([
+            'qr_code' => 'required|string',
+        ]);
+
+        \Log::info('QR Code Received:', ['qr_code' => $request->qr_code]);
+
+        try {
+            // Dekripsi QR Code
+            $decryptedData = Crypt::decryptString(trim($request->qr_code));
+            \Log::info('Decrypted QR Code:', ['decrypted_data' => $decryptedData]);
+
+            // Pecah string QR Code berdasarkan delimiter "|"
+            $parts = explode('|', $decryptedData);
+
+            if (count($parts) !== 4) {
+                return redirect()->route('validate.qrcode')->with('error', 'QR Code tidak valid.');
+            }
+
+            $role = trim($parts[0]);  // Bisa 'Prepare', 'Check1', 'Check2', atau 'Approved'
+            $noTransaksi = trim($parts[1]);
+            $approvedBy = trim($parts[2]);
+
+            \Log::info('Parsed QR Code Data:', [
+                'role' => $role,
+                'no_transaksi' => $noTransaksi,
+                'approved_by' => $approvedBy
+            ]);
+
+            // Cek apakah nomor transaksi tersedia di database
+            $submission = Submission::where('no_transaksi', $noTransaksi)->first();
+
+            // List peran yang diizinkan
+            $validRoles = ['Prepare', 'Check1', 'Check2', 'Approved'];
+
+            if ($submission && in_array($role, $validRoles)) {
+                return redirect()->route('validate.qrcode')->with('success', "Validasi Berhasil! Peran: {$role}, Transaksi: {$noTransaksi}, Disetujui oleh: {$approvedBy}");
+            } else {
+                return redirect()->route('validate.qrcode')->with('error', 'Data QR Code tidak dikenali.');
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Error while processing QR Code:', ['error' => $e->getMessage()]);
+            return redirect()->route('validate.qrcode')->with('error', 'Terjadi kesalahan saat membaca QR Code.');
+        }
+    }
+
+
+
+
+
+
+}

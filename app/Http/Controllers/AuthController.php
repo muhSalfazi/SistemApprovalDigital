@@ -22,13 +22,18 @@ class AuthController extends Controller
     ]);
 
     // Cek apakah input berupa email atau ID-Card
-    $fieldType = filter_var($request->loginIdentifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'IDcard';
+ // Tentukan field berdasarkan input pengguna
+ $fieldType = filter_var($request->loginIdentifier, FILTER_VALIDATE_EMAIL)
+ ? 'email'
+ : (is_numeric($request->loginIdentifier) && strlen($request->loginIdentifier) <= 8
+     ? 'IDcard'
+     : 'RFID');
 
     // Cari user berdasarkan email atau ID-card
     $user = User::where($fieldType, $request->loginIdentifier)->first();
 
     if (!$user) {
-        return back()->withErrors(['loginIdentifier' => 'Email atau ID-Card tidak terdaftar.'])->withInput();
+        return back()->withErrors(['loginIdentifier' => 'Email,ID-Card atau RFID tidak terdaftar.'])->withInput();
     }
 
     // Autentikasi pengguna

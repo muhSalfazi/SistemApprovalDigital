@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property string $nama_kategori
@@ -31,11 +31,16 @@ class Kategori extends Model
 
     protected $fillable = [
         'nama_kategori',
+        'alias_name'
     ];
 
     public function submission()
     {
         return $this->hasMany(Submission::class, 'id_kategori');
+    }
+
+    public function User(){
+        return $this->hasMany(User::class, 'id_kategori');
     }
 
 

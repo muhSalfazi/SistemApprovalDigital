@@ -67,12 +67,13 @@ class ApprovalController extends Controller
             ], 500);
         }
     }
+
     public function getApprovalData($submissionId)
     {
         $user = auth()->user();
         $userRoles = $user->roles->pluck('name')->toArray(); // Ambil semua role pengguna
 
-        // Urutan role untuk approval
+        // Urutan role untuk approval (berdasarkan prioritas)
         $requiredApprovalOrder = ['Check1', 'Check2', 'approved'];
 
         // Ambil semua approval yang sudah dilakukan pada submission ini
@@ -82,77 +83,92 @@ class ApprovalController extends Controller
             })
             ->get()
             ->groupBy(function ($approval) {
-                return $approval->user->roles->pluck('name')->first();
+                return $approval->user->roles->pluck('name')->toArray();
             });
 
-        // Pastikan user belum melakukan approval dengan role yang sama sebelumnya
-        $roleAlreadyApproved = false;
-        foreach ($userRoles as $role) {
-            if ($existingApprovals->has($role)) {
-                $roleAlreadyApproved = true;
-                break;
-            }
-        }
-
-        // Periksa apakah user adalah superadmin dan sudah approve sebelumnya
-        $superAdminApproved = false;
-        if (in_array('superadmin', $userRoles)) {
-            $superAdminApproved = Approval::where('id_submission', $submissionId)
-                ->where('auditor_id', $user->id)
-                ->exists();
-        }
-
-        // Temukan semua role pengguna dalam urutan approval
+        // Temukan semua role yang dimiliki pengguna yang sesuai dengan urutan approval
         $matchingRoles = array_intersect($requiredApprovalOrder, $userRoles);
 
-        // Jika tidak ada role yang cocok, larang akses
         if (empty($matchingRoles)) {
             return response()->json([
                 'userRole' => null,
                 'existingApproval' => false,
                 'canApprove' => false,
+                'approvedApprovals' => [],
             ]);
         }
 
-        // Ambil role dengan prioritas tertinggi yang dimiliki pengguna
-        $userRole = collect($requiredApprovalOrder)->first(function ($role) use ($matchingRoles) {
-            return in_array($role, $matchingRoles);
+        // Pilih role tertinggi dari role yang dimiliki pengguna
+        $userHighestRole = null;
+        foreach ($requiredApprovalOrder as $role) {
+            if (in_array($role, $matchingRoles)) {
+                $userHighestRole = $role;
+            }
+        }
+
+        // Cek apakah pengguna telah menyetujui dengan salah satu role tertinggi yang mereka miliki
+        $roleAlreadyApproved = collect($matchingRoles)->contains(function ($role) use ($existingApprovals) {
+            return $existingApprovals->has($role) &&
+                strtolower($existingApprovals[$role]->first()->status) === 'approved';
         });
 
-        $currentRoleIndex = array_search($userRole, $requiredApprovalOrder);
-
-        // Cek apakah semua tahap sebelum current role sudah disetujui
+        // Pastikan approval sebelumnya sudah selesai dan semua berstatus 'approved'
+        $currentRoleIndex = array_search($userHighestRole, $requiredApprovalOrder);
         $allPreviousApproved = true;
+
         for ($i = 0; $i < $currentRoleIndex; $i++) {
-            $roleToCheck = $requiredApprovalOrder[$i];
-            if (!$existingApprovals->has($roleToCheck)) {
+            $previousRole = $requiredApprovalOrder[$i];
+
+            // Jika approval sebelumnya belum ada, approval belum selesai
+            if (!$existingApprovals->has($previousRole)) {
+                $allPreviousApproved = false;
+                break;
+            }
+
+            $approvalStatus = strtolower($existingApprovals[$previousRole]->first()->status);
+
+            // Jika approval sebelumnya berstatus 'rejected', form tidak boleh ditampilkan
+            if ($approvalStatus === 'rejected') {
+                return response()->json([
+                    'userRole' => $userHighestRole,
+                    'existingApproval' => true,
+                    'canApprove' => false,
+                ]);
+            }
+
+            // Simpan semua role dengan status "approved"
+            if ($approvalStatus === 'approved') {
+                foreach ($existingApprovals[$previousRole] as $approval) {
+                    $approvedApprovals[] = [
+                        'role' => $previousRole,
+                        'status' => $approvalStatus,
+                        'approved_by' => $approval->user->name
+                    ];
+                }
+            } else {
                 $allPreviousApproved = false;
                 break;
             }
         }
 
-        // Cek apakah approval tertinggi sudah dilakukan oleh pengguna lain
-        $highestApprovalExists = $existingApprovals->has(end($requiredApprovalOrder));
+        // Cek apakah pengguna merupakan satu-satunya yang memiliki role tertinggi yang harus approve
+        $isOnlyApprover = !Approval::where('id_submission', $submissionId)
+            ->whereHas('user.roles', function ($query) use ($userHighestRole) {
+                $query->where('name', $userHighestRole);
+            })
+            ->exists();
 
-        // Form hanya muncul jika semua approval sebelumnya selesai dan pengguna belum approve untuk tahap ini
-        $canApprove = $allPreviousApproved && !$roleAlreadyApproved;
-
-        // Superadmin hanya bisa approve sekali
-        if (in_array('superadmin', $userRoles) && $superAdminApproved) {
-            $canApprove = false;
-        }
-
-        // Pastikan pengguna dengan role "approved" tetap bisa melakukan approval jika belum melakukannya
-        if (in_array('approved', $userRoles) && !$existingApprovals->has('approved')) {
-            $canApprove = true;
-        }
+        // Form akan muncul jika semua approval sebelumnya berstatus 'approved' dan role tertinggi belum approve
+        $canApprove = ($allPreviousApproved && !$roleAlreadyApproved) || $isOnlyApprover;
 
         return response()->json([
-            'userRole' => $userRole,
-            'existingApproval' => $roleAlreadyApproved,
-            'canApprove' => $canApprove,
+            'userRoles' => $matchingRoles,  // Semua role yang dimiliki user sesuai prioritas
+            'userHighestRole' => $userHighestRole, // Role tertinggi yang bisa approve
+            'existingApproval' => $roleAlreadyApproved, // Apakah user sudah approve dengan role tertinggi
+            'canApprove' => $canApprove, // Apakah form harus ditampilkan
         ]);
     }
+
 
     public function getApprovalTable($submissionId)
     {

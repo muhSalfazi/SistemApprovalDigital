@@ -3,7 +3,7 @@
 @section('title', 'Submissions')
 
 @section('content')
-    <div class="pagetitle">
+    <div class="pagetitle animate__animated animate__fadeInLeft">
         <h1>Submissions</h1>
         <nav>
             <ol class="breadcrumb">
@@ -15,17 +15,17 @@
     <section class="section">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">List of Submissions</h5>
+                <h5 class="card-title animate__animated animate__fadeInLeft">List of Submissions</h5>
                 @if (Auth::check() && Auth::user()->roles->isNotEmpty())
                     @if (Auth::user()->roles->pluck('name')->contains('prepared'))
                         <div class="mb-3">
-                            <a href="{{ route('submissions.create') }}" class="btn btn-primary">
+                            <a href="{{ route('submissions.create') }}" class="btn btn-primary btn-sm">
                                 <i class="bi bi-plus-square"></i> Add Submission
                             </a>
                         </div>
                     @endif
                 @endif
-                <div class="table-responsive">
+                <div class="table-responsive animate__animated animate__fadeInUp">
                     <table class="table table-striped table-bordered datatable">
                         <thead>
                             <tr>
@@ -79,7 +79,7 @@
                                                     $statusText = match (true) {
                                                         $status === 'approved' => 'Approved by ' .
                                                             ucfirst($highestRole),
-                                                        $status === 'rejected' => 'Rejected',
+                                                        $status === 'rejected' => 'Rejected by '.  ucfirst($highestRole),
                                                         default => 'Pending',
                                                     };
 
@@ -92,13 +92,17 @@
                                                 @endphp
 
                                                 <span class="badge {{ $badgeClass }}"
-                                                    title="Last approval by {{ ucfirst($highestRole) }}">
+                                                    title="Last approval by {{ ucfirst($highestRole) }}"
+                                                    style="font-size: 0.775rem; padding: 3px 8px;">
                                                     {{ $statusText }}
                                                 </span>
                                                 <br>
-                                                <small class="text-muted">Date: {{ $approvalDate }}</small>
+                                                <small class="text-muted"
+                                                    style="font-size: 0.775rem; padding: 3px 8px;">Date:
+                                                    {{ $approvalDate }}</small>
                                             @else
-                                                <span class="badge bg-secondary">Pending</span>
+                                                <span class="badge bg-secondary"
+                                                    style="font-size: 0.775rem; padding: 3px 8px;">Pending</span>
                                             @endif
                                         @endif
                                     </td>
@@ -106,6 +110,7 @@
                                         @if (Auth::user()->roles->pluck('name')->intersect(['superadmin', 'prepared', 'Check1', 'Check2', 'approved'])->isNotEmpty())
                                             <td>
                                                 <button class="btn btn-info btn-sm"
+                                                    style="font-size: 0.775rem; padding: 3px 8px;"
                                                     onclick="openApprovalModal({{ $submission->id }}, '{{ asset($submission->lampiran_pdf) }}')">
                                                     <i class="bi bi-eye"></i> View
                                                 </button>
@@ -115,14 +120,15 @@
                                         <td>{{ $submission->user->name }}|{{ $submission->user->departement->nama_departement }}
                                         <td>{{ \Carbon\Carbon::parse($submission->created_at)->format('d M Y H:i:s') }}
                                         </td>
-                                        @if ($roleNames->contains('prepared') && $submission->id_user === auth()->id())
+                                        @if ($roleNames->contains('superadmin') || ($roleNames->contains('prepared') && $submission->id_user === auth()->id()))
                                             <td>
                                                 <form action="{{ route('submissions.destroy', $submission->id) }}"
                                                     method="POST"
                                                     onsubmit="return confirm('Apakah Anda yakin ingin menghapus submission ini?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                    <button type="submit" class="btn btn-danger btn-sm"
+                                                        style="font-size: 0.775rem; padding: 3px 8px;">
                                                         <i class="bi bi-trash"></i> Delete
                                                     </button>
                                                 </form>
@@ -168,13 +174,13 @@
 
                     /* Atur margin modal lebih rapat */
                     .modal-body {
-                        padding-top: 10px;
-                        padding-bottom: 10px;
+                        padding-top: 5px;
+                        padding-bottom: 5px;
                     }
 
                     /* Jarak antar elemen dalam modal */
                     .modal-body>* {
-                        margin-bottom: 10px;
+                        margin-bottom: 5px;
                     }
 
                     .pdf-container {
@@ -210,7 +216,7 @@
 
 
                 {{-- modal view --}}
-                <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel"
+                <div class="modal fade animate__animated animate__fadeInDown" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel"
                     aria-hidden="true">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">

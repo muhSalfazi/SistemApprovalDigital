@@ -3,7 +3,7 @@
 @section('title', 'Data Kategori')
 
 @section('content')
-    <div class="pagetitle">
+    <div class="pagetitle animate__animated animate__fadeInLeft">
         <h1>Data Kategori</h1>
         <nav>
             <ol class="breadcrumb">
@@ -25,25 +25,40 @@
             {{ session('error') }}
         </div>
     @endif
+    @if ($errors->any())
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Validasi Gagal!',
+            html: `
+                <ul style="text-align: left;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            `,
+        });</script>
+@endif
 
     <section class="section">
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Data Kategori</h5>
+                        <h5 class="card-title animate__animated animate__fadeInLeft">Data Kategori</h5>
                         <div class="mb-3">
-                            <button class="btn btn-primary" onclick="createKategori()">
+                            <button class="btn btn-primary btn-sm" onclick="createKategori()">
                                 <i class="bi bi-plus-square"></i> Create New Kategori
                             </button>
                         </div>
 
-                        <div class="table-responsive">
+                        <div class="table-responsive animate__animated animate__fadeInUp">
                             <table class="table table-striped table-bordered datatable">
                                 <thead>
                                     <tr>
                                         <th class="text-center">NO</th>
                                         <th class="text-center">Nama Kategori</th>
+                                        <th class="text-center">Alias</th>
                                         <th class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -52,9 +67,10 @@
                                         <tr>
                                             <td class="text-center">{{ $loop->iteration }}</td>
                                             <td class="text-center">{{ $kategori->nama_kategori }}</td>
+                                            <td class="text-center">{{ $kategori->alias_name }}</td>
                                             <td class="text-center">
                                                 <!-- Tombol Edit -->
-                                                <button class="btn btn-primary btn-sm mt-2"
+                                                <button class="btn btn-primary btn-sm" style="font-size: 0.775rem; padding: 3px 8px;"
                                                     onclick="editKategori({{ $kategori->id }})">
                                                     <i class="bi bi-pencil-square"></i> Edit
                                                 </button>
@@ -65,7 +81,7 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button" onclick="confirmDelete({{ $kategori->id }})"
-                                                        class="btn btn-danger btn-sm mt-2">
+                                                        class="btn btn-danger btn-sm " style="font-size: 0.775rem; padding: 3px 8px;">
                                                         <i class="bi bi-trash3"></i> Delete
                                                     </button>
                                                 </form>
@@ -82,12 +98,13 @@
     </section>
 
     <!-- Modal -->
-    <div class="modal fade" id="kategoriModal" tabindex="-1" aria-labelledby="kategoriModalLabel" aria-hidden="true">
+    <div class="modal fade animate__animated animate__fadeInDown" id="kategoriModal" tabindex="-1" aria-labelledby="kategoriModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <form id="kategoriForm" method="POST" action="">
+                <form id="kategoriForm" method="POST" action="{{ route('kategori.store') }}">
                     @csrf
                     <input type="hidden" name="_method" id="_method" value="">
+
                     <div class="modal-header">
                         <h5 class="modal-title" id="kategoriModalLabel">Tambah/Edit Kategori</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -95,7 +112,19 @@
                     <div class="modal-body">
                         <div class="col-md-12 mb-3">
                             <label for="kategoriName" class="form-label">Nama Kategori</label>
-                            <input type="text" name="nama_kategori" id="kategoriName" class="form-control" required>
+                            <input type="text" name="nama_kategori" id="kategoriName" class="form-control"
+                                   value="{{ old('nama_kategori') }}" required>
+                            @error('nama_kategori')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="alias_name" class="form-label">Alias Kategori</label>
+                            <input type="text" name="alias_name" id="alias_name" class="form-control"
+                                   value="{{ old('alias_name') }}" required maxlength="4">
+                            @error('alias_name')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -106,6 +135,7 @@
             </div>
         </div>
     </div>
+
 
     <script>
         function createKategori() {
@@ -133,6 +163,7 @@
                     // Setel metode ke PUT
                     document.getElementById('_method').value = "PUT";
                     document.getElementById('kategoriName').value = data.nama_kategori;
+                    document.getElementById('alias_name').value = data.alias_name;
 
                     // Tampilkan modal
                     const modal = new bootstrap.Modal(document.getElementById('kategoriModal'));

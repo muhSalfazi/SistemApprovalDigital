@@ -17,12 +17,15 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('password')->nullable();
             $table->string('IDcard')->nullable();
+            $table->string('RFID')->nullable();
             $table->unsignedBigInteger('id_departement')->nullable();
+            $table->unsignedBigInteger('id_kategori')->nullable();
             $table->datetime('last_login')->nullable();
             $table->timestamps();
 
             // fk
             $table->foreign('id_departement')->references('id')->on('tbl_departement');
+            $table->foreign('id_kategori')->references('id')->on('tbl_kategori');
     });
     }
 

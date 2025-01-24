@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\QRCodeController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -21,13 +22,15 @@ use App\Http\Controllers\ApprovalController;
 //     return view('welcome');
 // });
 
+Route::get('/validate-qrcode', [QrCodeController::class, 'showqr'])->name('validate.qrcode');
+Route::post('/validate-qrcode', [QrCodeController::class, 'validateQRCode']);
+
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('postlogin');
 
 Route::middleware(['auth'])->group(function () {
     //    untuk logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    // Route::resource('users', UserController::class);
 
     Route::get('users', [UserController::class, 'index'])->name('users.index');
     Route::get('users/create', [UserController::class, 'create'])->name('users.create');
@@ -57,10 +60,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/submissions/{id}/details', [SubmissionController::class, 'getSubmissionDetails'])->name('submissions.details');
 
     // download file
-    // Route::get('submissions/download/{id}', [SubmissionController::class, 'download'])->name('submissions.download');
     Route::get('/download-qrcode/{id}', [SubmissionController::class, 'downloadWithQRCode'])->name('submissions.download');
     // generate transaction number
-    Route::get('submissions/generate-transaction-number', [SubmissionController::class, 'generateTransactionNumber'])->name('submissions.generateTransactionNumber');
+    Route::post('submissions/generate-transaction-number', [SubmissionController::class, 'generateTransactionNumber'])->name('generateTransactionNumber');
     // approval store
     Route::post('/submissions/approval', [ApprovalController::class, 'store'])->name('submissions.approval');
 

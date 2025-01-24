@@ -21,33 +21,47 @@ class SubmissionController extends Controller
     // Generate nomor transaksi
     public function generateTransactionNumber(Request $request)
     {
-        \Log::info('Received request:', $request->all());
-
-        $request->validate([
-            'id_departement' => 'required|exists:tbl_departement,id',
-        ]);
+        \Log::info('Received encrypted request:', $request->all());
 
         try {
+            // Dekripsi ID departemen dan kategori
+            $decryptedDepartementId = decrypt($request->id_departement);
+            $decryptedKategoriId = decrypt($request->id_kategori);
+
+            // Validasi data setelah didekripsi
+            $request->merge([
+                'id_departement' => $decryptedDepartementId,
+                'id_kategori' => $decryptedKategoriId,
+            ]);
+
+            $request->validate([
+                'id_departement' => 'required|exists:tbl_departement,id',
+                'id_kategori' => 'required|exists:tbl_kategori,id',
+            ]);
+
+            // Ambil alias_name kategori berdasarkan id_kategori yang sudah didekripsi
+            $kategori = Kategori::findOrFail($decryptedKategoriId);
+            $aliasName = strtoupper($kategori->alias_name);
+
             // Ambil submission terbaru berdasarkan departemen
-            $latestSubmission = Submission::where('id_departement', $request->id_departement)
+            $latestSubmission = Submission::where('id_departement', $decryptedDepartementId)
                 ->latest('created_at')
                 ->first();
 
-            // Jika tidak ada submission sebelumnya untuk departemen ini, mulai dari 00
+            // Jika tidak ada submission sebelumnya, mulai dari 00
             $lastNumber = $latestSubmission ? intval(substr($latestSubmission->no_transaksi, -2)) : -1;
-
-            // Tambahkan 1 jika $lastNumber >= 0, jika -1 maka akan menjadi 00
             $newNumber = str_pad($lastNumber + 1, 2, '0', STR_PAD_LEFT);
 
             $currentMonth = date('m');
             $currentYear = date('y');
 
-            // Format nomor transaksi berdasarkan departemen
-            $no_transaksi = str_pad($request->id_departement, 2, '0', STR_PAD_LEFT) . $currentMonth . $currentYear . $newNumber;
+            // Format nomor transaksi dengan alias_name kategori di depan
+            $no_transaksi = $aliasName . '-' . str_pad($decryptedDepartementId, 2, '0', STR_PAD_LEFT) . $currentMonth . $currentYear . $newNumber;
 
             \Log::info('Generated transaction number:', ['no_transaksi' => $no_transaksi]);
 
             return response()->json(['no_transaksi' => $no_transaksi]);
+
         } catch (\Exception $e) {
             \Log::error('Error generating transaction number:', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Unable to generate transaction number.'], 500);
@@ -57,74 +71,88 @@ class SubmissionController extends Controller
     //view
     public function create()
     {
-        // Ambil data departemen kecuali yang bernama 'ALL'
-        $departements = Departement::where('nama_departement', '!=', 'ALL')->get();
+        // Ambil pengguna yang sedang login
+        $user = auth()->user();
 
-        // Ambil semua data kategori
-        $categories = Kategori::all();
+        // Ambil departemen berdasarkan id yang dimiliki user (dengan pengecualian 'ALL')
+        $departements = Departement::where('nama_departement', '!=', 'ALL')
+            ->where('id', $user->id_departement)
+            ->get();
+
+        // Ambil kategori berdasarkan id yang dimiliki user
+        $categories = Kategori::where('id', $user->id_kategori)->get();
 
         return view('Pages.Approval.create', compact('departements', 'categories'));
     }
 
+
     // Simpan submission
     public function store(Request $request)
     {
-        // Validasi input
-        $request->validate([
-            'id_departement' => 'required|exists:tbl_departement,id',
-            'id_kategori' => 'required|exists:tbl_kategori,id',
-            'id_user' => 'required|exists:tbl_users,id',
-            'title' => 'required|string|max:255',
-            'no_transaksi' => 'required|string',
-            'remark' => 'required|string|max:200',
-            'lampiran_pdf' => 'required|mimes:pdf|max:5120',
-        ]);
-
-        \Log::info('Received request data:', $request->all());
-
-        // Handle file upload
-        $filePath = null;
-        if ($request->hasFile('lampiran_pdf')) {
-            $pdfFile = $request->file('lampiran_pdf');
-            $fileName = $request->no_transaksi . '.' . $pdfFile->getClientOriginalExtension();
-
-            // Simpan file di direktori public/submissions
-            $destinationPath = public_path('submissions');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true); // Buat folder jika belum ada
-            }
-            $pdfFile->move($destinationPath, $fileName);
-
-            // Simpan path relatif ke database
-            $filePath = 'submissions/' . $fileName;
-
-            \Log::info('File path:', ['path' => $filePath]);
-        }
-
         try {
+            // Dekripsi nilai departemen dan kategori sebelum validasi
+            $idDepartement = decrypt($request->input('id_departement'));
+            $idKategori = decrypt($request->input('id_kategori'));
+
+            // Validasi data
+            $request->merge([
+                'id_departement' => $idDepartement,
+                'id_kategori' => $idKategori,
+            ]);
+
+            $request->validate([
+                'id_departement' => 'required|exists:tbl_departement,id',
+                'id_kategori' => 'required|exists:tbl_kategori,id',
+                'title' => 'required|string|max:255',
+                'no_transaksi' => 'required|string',
+                'remark' => 'required|string|max:500',
+                'lampiran_pdf' => 'required|mimes:pdf|max:5120',
+            ]);
+
+            \Log::info('Request Data:', $request->all());
+
+            // Handle file upload
+            $filePath = null;
+            if ($request->hasFile('lampiran_pdf')) {
+                $pdfFile = $request->file('lampiran_pdf');
+                $fileName = $request->no_transaksi . '.' . $pdfFile->getClientOriginalExtension();
+
+                // Simpan file di direktori public/submissions
+                $destinationPath = public_path('submissions');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true); // Buat folder jika belum ada
+                }
+                $pdfFile->move($destinationPath, $fileName);
+
+                // Simpan path relatif ke database
+                $filePath = 'submissions/' . $fileName;
+
+                \Log::info('File path:', ['path' => $filePath]);
+            }
+
+            // Simpan data ke database
             Submission::create([
-                'id_departement' => $request->id_departement,
-                'id_kategori' => $request->id_kategori,
-                'id_user' => $request->id_user,
+                'id_departement' => $idDepartement,
+                'id_kategori' => $idKategori,
+                'id_user' => auth()->user()->id,
                 'title' => $request->title,
                 'no_transaksi' => $request->no_transaksi,
                 'remark' => $request->remark,
                 'lampiran_pdf' => $filePath,
             ]);
+
+            return redirect()->route('submissions.index')->with('success', 'Submission berhasil disimpan.');
+
         } catch (\Exception $e) {
             \Log::error('Error saving submission:', ['error' => $e->getMessage()]);
             return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data.'])->withInput();
         }
-
-        return redirect()->route('submissions.index')->with('success', 'Submission berhasil dibuat.');
     }
 
     // Tampilkan daftar submission
     public function index()
     {
-        $user = auth()->user();
-
-        // Ambil semua nama role pengguna
+        $user = auth()->user()->load('roles', 'kategori'); // Load eager untuk menghindari null
         $roleNames = $user->roles->pluck('name');
 
         if ($roleNames->isEmpty()) {
@@ -134,52 +162,55 @@ class SubmissionController extends Controller
         // Periksa apakah user adalah superadmin
         $isSuperAdmin = $roleNames->contains('superadmin');
 
-        $userDepartmentId = $user->id_departement; // Departemen pengguna
-        $allowedDepartments = [$userDepartmentId];
+        // Ambil ID departemen dan kategori pengguna
+        $userDepartmentId = $user->id_departement;
+        $userCategoryId = $user->id_kategori;
 
         // Query untuk menyesuaikan semua role yang dimiliki
         $submissions = Submission::with(['kategori', 'departement', 'user', 'approvals.user.roles'])
-            ->when(!$isSuperAdmin && $roleNames->contains('prepared'), function ($query) use ($user, $allowedDepartments) {
-                // Data untuk role 'prepared', hanya untuk departemen tertentu
-                $query->orWhere(function ($query) use ($user, $allowedDepartments) {
-                    $query->where('id_user', $user->id)
-                        ->whereIn('id_departement', $allowedDepartments);
-                });
+            ->when(!$isSuperAdmin && $roleNames->contains('prepared'), function ($query) use ($user) {
+                // Data untuk role 'prepared', hanya untuk submission yang dibuat oleh pengguna ini dan sesuai dengan departemen/kategori mereka
+                $query->where('id_user', $user->id)
+                    ->where('id_departement', $user->id_departement)
+                    ->where('id_kategori', $user->id_kategori);
             })
-            ->when(!$isSuperAdmin && $roleNames->contains('Check1'), function ($query) use ($userDepartmentId) {
-                // Data untuk role 'Check1', hanya untuk departemen tertentu
-                $query->orWhere(function ($query) use ($userDepartmentId) {
-                    $query->where(function ($query) use ($userDepartmentId) {
+            ->when(!$isSuperAdmin && $roleNames->contains('Check1'), function ($query) use ($userDepartmentId, $userCategoryId) {
+                // Data untuk role 'Check1', hanya untuk departemen dan kategori tertentu
+                $query->orWhere(function ($query) use ($userDepartmentId, $userCategoryId) {
+                    $query->where(function ($query) {
                         $query->whereDoesntHave('approvals', function ($subQuery) {
                             $subQuery->whereHas('user.roles', function ($roleQuery) {
                                 $roleQuery->whereIn('name', ['Check1', 'Check2', 'approved']);
                             });
                         })
-                        ->orWhereHas('approvals', function ($subQuery) {
-                            $subQuery->whereNull('status'); // Approval dengan status null
-                        });
-                    })->where('id_departement', $userDepartmentId);
+                            ->orWhereHas('approvals', function ($subQuery) {
+                                $subQuery->whereNull('status');
+                            });
+                    })
+                        ->where('id_departement', $userDepartmentId)
+                        ->where('id_kategori', $userCategoryId);
                 });
             })
-            ->when(!$isSuperAdmin && $roleNames->contains('Check2'), function ($query) use ($userDepartmentId) {
-                // Data untuk role 'Check2', hanya untuk departemen tertentu
-                $query->orWhere(function ($query) use ($userDepartmentId) {
+            ->when(!$isSuperAdmin && $roleNames->contains('Check2'), function ($query) use ($userDepartmentId, $userCategoryId) {
+                // Data untuk role 'Check2', hanya untuk departemen dan kategori tertentu
+                $query->orWhere(function ($query) use ($userDepartmentId, $userCategoryId) {
                     $query->whereHas('approvals', function ($subQuery) {
                         $subQuery->where('status', 'approved')
                             ->whereHas('user.roles', function ($roleQuery) {
                                 $roleQuery->where('name', 'Check1');
                             });
                     })
-                    ->where('id_departement', $userDepartmentId)
-                    ->whereDoesntHave('approvals', function ($subQuery) {
-                        $subQuery->whereHas('user.roles', function ($roleQuery) {
-                            $roleQuery->whereIn('name', ['Check2', 'approved']);
+                        ->where('id_departement', $userDepartmentId)
+                        ->where('id_kategori', $userCategoryId)
+                        ->whereDoesntHave('approvals', function ($subQuery) {
+                            $subQuery->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->whereIn('name', ['Check2', 'approved']);
+                            });
                         });
-                    });
                 });
             })
             ->when(!$isSuperAdmin && $roleNames->contains('approved'), function ($query) {
-                // Data untuk role 'approved', hanya untuk departemen tertentu
+                // Data untuk role 'approved', melihat semua departemen dan kategori, hanya jika sudah di-approve oleh Check2
                 $query->orWhere(function ($query) {
                     $query->whereHas('approvals', function ($subQuery) {
                         $subQuery->where('status', 'approved')
@@ -187,15 +218,15 @@ class SubmissionController extends Controller
                                 $roleQuery->where('name', 'Check2');
                             });
                     })
-                    ->whereDoesntHave('approvals', function ($subQuery) {
-                        $subQuery->whereHas('user.roles', function ($roleQuery) {
-                            $roleQuery->where('name', 'approved');
+                        ->whereDoesntHave('approvals', function ($subQuery) {
+                            $subQuery->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->where('name', 'approved');
+                            });
                         });
-                    });
                 });
             })
             ->when($isSuperAdmin, function ($query) {
-                // Jika superadmin, tampilkan semua data tanpa batasan departemen
+                // Jika superadmin, tampilkan semua data tanpa batasan departemen atau kategori
                 $query->orWhereNotNull('id');
             })
             ->get();
@@ -215,15 +246,14 @@ class SubmissionController extends Controller
 
         // Urutan approval
         $approvalStages = ['prepare', 'Check1', 'Check2', 'approved'];
-
         $approvals = [];
         $approvalTimes = [];
 
-        // Ambil waktu prepare berdasarkan create_at submission
+        // Ambil waktu prepare berdasarkan created_at submission
         $approvals['prepare'] = $submission->user->name ?? 'Pending';
         $approvalTimes['prepare'] = $submission->created_at ? $submission->created_at->format('d M Y H:i:s') : 'Pending';
 
-        // Ambil approval berdasarkan role yang dimiliki pengguna
+        // Ambil approval berdasarkan role pengguna
         foreach (['Check1', 'Check2', 'approved'] as $stage) {
             $approval = $submission->approvals->first(function ($approval) use ($stage) {
                 return $approval->user->roles->pluck('name')->contains($stage);
@@ -241,52 +271,66 @@ class SubmissionController extends Controller
         // Fungsi untuk generate QR Code menggunakan Endroid QR Code
         function generateQrCode($content)
         {
+            $encryptedData = Crypt::encryptString($content);  // Enkripsi data
             return Builder::create()
                 ->writer(new PngWriter())
-                ->data(Crypt::encryptString($content))
+                ->data($encryptedData)  // QR code berisi data terenkripsi
                 ->encoding(new Encoding('UTF-8'))
-                ->size(250) // QR code lebih besar untuk profesional tampilan
-                ->margin(10)
+                ->size(400)  // Ukuran diperbesar agar lebih mudah terbaca
+                ->margin(20)  // Margin untuk akurasi
                 ->build()
                 ->getString();
         }
 
-        // Generate QR Codes
+        // Encoding base64 dilakukan di sini
         $qrCodes = [
-            'prepare'  => base64_encode(generateQrCode("Prepare: {$submission->no_transaksi} - {$approvals['prepare']} - {$approvalTimes['prepare']}")),
-            'check1'   => base64_encode(generateQrCode("Check-1: {$submission->no_transaksi} - {$approvals['Check1']} - {$approvalTimes['Check1']}")),
-            'check2'   => base64_encode(generateQrCode("Check-2: {$submission->no_transaksi} - {$approvals['Check2']} - {$approvalTimes['Check2']}")),
-            'approved' => base64_encode(generateQrCode("Approved: {$submission->no_transaksi} - {$approvals['approved']} - {$approvalTimes['approved']}")),
+            'prepare' => base64_encode(generateQrCode("Prepare|{$submission->no_transaksi}|{$approvals['prepare']}|{$approvalTimes['prepare']}")),
+            'check1'  => base64_encode(generateQrCode("Check1|{$submission->no_transaksi}|{$approvals['Check1']}|{$approvalTimes['Check1']}")),
+            'check2'  => base64_encode(generateQrCode("Check2|{$submission->no_transaksi}|{$approvals['Check2']}|{$approvalTimes['Check2']}")),
+            'approved'=> base64_encode(generateQrCode("Approved|{$submission->no_transaksi}|{$approvals['approved']}|{$approvalTimes['approved']}")),
         ];
+
+
+
+
 
         // Generate halaman QR Code sebagai HTML
         $html = View::make('pdf.qrcode', compact('submission', 'qrCodes', 'approvals', 'approvalTimes'))->render();
 
-        // Create PDF using GD instead of Imagick
+        // Inisialisasi MPDF dengan pengaturan otomatis orientasi
         $mpdf = new Mpdf([
             'useGD' => true,
             'mode' => 'utf-8',
             'format' => 'A4',
+            'orientation' => 'P', // Default portrait
+            'autoPageBreak' => true,
         ]);
 
-        $mpdf->AddPage();
+        // Tambahkan halaman QR code
+        $mpdf->AddPage('P');
         $mpdf->WriteHTML($html);
 
         $pageCount = $mpdf->SetSourceFile($filePath);
         for ($i = 1; $i <= $pageCount; $i++) {
             $tplId = $mpdf->ImportPage($i);
-            $mpdf->AddPage();
+
+            // Deteksi orientasi halaman
+            $size = $mpdf->GetTemplateSize($tplId);
+            $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
+
+            $mpdf->AddPage($orientation);
             $mpdf->UseTemplate($tplId);
         }
 
+        $fileName = 'approved_' . str_replace('/', '-', $submission->no_transaksi) . '-kBI.pdf';
         // Output PDF
-        return response($mpdf->Output('', 'S'))
-        ->header('Content-Type', 'application/pdf')
-        ->header('Content-Disposition', 'inline; filename="approved-system-kbi.pdf"')
-        ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
-        ->header('Pragma', 'public');
-
+        return response($mpdf->Output($fileName, Destination::INLINE))
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', "inline; filename=\"$fileName\"")
+            ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
+            ->header('Pragma', 'public');
     }
+
 
     public function destroy($id)
     {
