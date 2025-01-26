@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  *
@@ -39,10 +40,10 @@ class Kategori extends Model
         return $this->hasMany(Submission::class, 'id_kategori');
     }
 
-    public function User(){
-        return $this->hasMany(User::class, 'id_kategori');
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'kategori_user', 'kategori_id', 'user_id');
     }
-
 
 
 }

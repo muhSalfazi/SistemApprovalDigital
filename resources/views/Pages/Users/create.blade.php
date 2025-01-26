@@ -58,6 +58,7 @@
 
                     <div class="col-md-6">
                         <label for="yourPassword" class="form-label">Password</label>
+                        <small class="text-muted">*Default Password value id card</small>
                         <div class="input-group has-validation">
                             <input type="password" name="password"
                                 class="form-control @error('password') is-invalid @enderror" id="yourPassword" required>
@@ -113,7 +114,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <small class="text-muted">*Role "approved" dan "viewer" tidak perlu memilih
+                    <small class="text-danger">*Role "approved" dan "viewer" tidak perlu memilih
                         departemen dan kategori</small>
 
 
@@ -128,21 +129,32 @@
 
     {{-- js hidden+show PW --}}
     <script>
-        document.getElementById('togglePassword').addEventListener('click', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            const idCardInput = document.querySelector('input[name="ID-card"]');
             const passwordInput = document.getElementById('yourPassword');
-            const passwordIcon = document.getElementById('togglePasswordIcon');
 
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                passwordIcon.classList.remove('bi-eye-slash');
-                passwordIcon.classList.add('bi-eye');
-            } else {
-                passwordInput.type = 'password';
-                passwordIcon.classList.remove('bi-eye');
-                passwordIcon.classList.add('bi-eye-slash');
-            }
+            idCardInput.addEventListener('input', function () {
+                passwordInput.value = idCardInput.value;
+            });
+
+            // Toggle Password Visibility
+            document.getElementById('togglePassword').addEventListener('click', function () {
+                const passwordInput = document.getElementById('yourPassword');
+                const passwordIcon = document.getElementById('togglePasswordIcon');
+
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    passwordIcon.classList.remove('bi-eye-slash');
+                    passwordIcon.classList.add('bi-eye');
+                } else {
+                    passwordInput.type = 'password';
+                    passwordIcon.classList.remove('bi-eye');
+                    passwordIcon.classList.add('bi-eye-slash');
+                }
+            });
         });
-    </script>
+        </script>
+
     {{-- filter role --}}
     <script>
        document.addEventListener('DOMContentLoaded', function() {

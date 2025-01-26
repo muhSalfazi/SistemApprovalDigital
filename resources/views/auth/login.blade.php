@@ -69,38 +69,40 @@
                                 <div class="card-body">
                                     <div class="pt-4 pb-2">
                                         <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
-                                        <p class="text-center small">Please sign-in to your account and start the adventure!</p>
+                                        <p class="text-center small">Please sign-in to your account and start the
+                                            adventure!</p>
                                     </div>
                                     <form class="row g-3 needs-validation" action="{{ route('postlogin') }}"
                                         method="POST" novalidate>
                                         @csrf
                                         <div class="col-12">
-                                            <label for="loginIdentifier" class="form-label">Email/ID-Card/RFID</label>
+                                            <label for="loginIdentifier" class="form-label">Email/ID-Card</label>
                                             <input type="text" name="loginIdentifier"
                                                 class="form-control @error('loginIdentifier') is-invalid @enderror"
                                                 id="loginIdentifier" value="{{ old('loginIdentifier') }}" required>
-                                            @error('loginIdentifier')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+
                                         </div>
+
                                         <div class="col-12">
                                             <label for="yourPassword" class="form-label">Password</label>
                                             <div class="input-group has-validation">
                                                 <input type="password" name="password"
-                                                    class="form-control  @error('password') is-invalid @enderror"
+                                                    class="form-control @error('loginIdentifier') is-invalid @enderror"
                                                     id="yourPassword" required>
                                                 <button type="button" class="btn btn-outline-secondary"
                                                     id="togglePassword">
                                                     <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
                                                 </button>
-                                                @error('password')
+                                                @error('loginIdentifier')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
                                         </div>
+
                                         <div class="d-grid">
                                             <button type="submit" class="btn btn-primary fw-bold">Login</button>
-                                            <a href="{{ route('validate.qrcode') }}" class="btn btn-outline-primary fw-bold mt-3">
+                                            <a href="{{ route('validate.qrcode') }}"
+                                                class="btn btn-outline-primary fw-bold mt-3">
                                                 <i class="bi bi-qr-code-scan"></i> Scan QR Code
                                             </a>
                                     </form>
@@ -122,11 +124,8 @@
                                             }
                                         });
                                     </script>
-
                                 </div>
                             </div>
-
-
                         </div>
                         <div class="credits">
                             <div class="copyright" style="text-align: center">

@@ -63,6 +63,7 @@ class User extends Authenticatable
         'role_id',
         'last_login',
         'IDcard',
+        'status',
         'id_departement',
         'id_kategori'
     ];
@@ -75,6 +76,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        
     ];
 
     /**
@@ -102,9 +104,12 @@ class User extends Authenticatable
         return $this->hasMany(Submission::class, 'id_user');
     }
 
-    public function Kategori(){
-        return $this->belongsTo(Kategori::class, 'id_kategori');
+
+    public function kategoris(): BelongsToMany
+    {
+        return $this->belongsToMany(Kategori::class, 'kategori_user', 'user_id', 'kategori_id');
     }
 
-    
+
+
 }

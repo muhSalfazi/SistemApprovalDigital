@@ -50,6 +50,7 @@
                                         <th scope="col" class="text-center">Email</th>
                                         <th scope="col" class="text-center">Role</th>
                                         <th scope="col" class="text-center">Last Login</th>
+                                        <th scope="col" class="text-center">Status</th>
                                         <th scope="col" class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -58,7 +59,11 @@
                                         <tr>
                                             <td class="text-center">{{ $loop->iteration }}</td>
                                             <td class="text-center">{{ $user->departement->nama_departement ?? '-' }}</td>
-                                            <td class="text-center">{{ $user->Kategori->alias_name ?? '-' }}</td>
+                                            <td class="text-center">
+                                                {{ $user->kategoris->pluck('alias_name')->implode(', ') ?: '-' }}
+                                            </td>
+
+
                                             <td class="text-center">{{ $user->IDcard }}</td>
                                             <td class="text-center">{{ $user->RFID }}</td>
                                             <td class="text-center">{{ $user->name }}</td>
@@ -72,6 +77,27 @@
                                                     N/A
                                                 @endif
                                             </td>
+                                            <td class="text-center">
+                                                @if (auth()->user()->roles->contains('name', 'superadmin'))
+                                                    <form action="{{ route('users.toggleStatus', $user->id) }}" method="POST" id="status-form-{{ $user->id }}">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <div class="form-check form-switch d-flex justify-content-center">
+                                                            <input type="checkbox" class="form-check-input" id="statusToggle{{ $user->id }}"
+                                                                onchange="confirmStatusChange({{ $user->id }}, this)"
+                                                                {{ $user->status ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="statusToggle{{ $user->id }}">
+                                                                {{ $user->status ? 'Active' : 'Inactive' }}
+                                                            </label>
+                                                        </div>
+                                                    </form>
+                                                @else
+                                                    <span class="badge {{ $user->status ? 'bg-success' : 'bg-danger' }}">
+                                                        {{ $user->status ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                @endif
+                                            </td>
+
                                             <td class="text-center">
                                                 <!-- Tombol Edit -->
                                                 <button class="btn btn-success btn-sm mb-1"
@@ -101,7 +127,8 @@
             </div>
         </div>
         <!-- Modal -->
-        <div class="modal fade animate__animated animate__fadeInDown" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal fade animate__animated animate__fadeInDown" id="editUserModal" tabindex="-1"
+            aria-labelledby="editUserModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <form id="editUserForm" method="POST" action="">
@@ -131,6 +158,13 @@
                                 </select>
                             </div>
                             <div class="mb-3">
+                                <label for="editKategori" class="form-label">Kategori</label>
+                                <select name="kategori_id" id="editKategori" class="form-select">
+                                    <!-- Options akan diisi melalui JavaScript -->
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="editPassword" class="form-label">Password</label>
                                 <input type="text" name="password" id="editPassword" class="form-control">
                             </div>
@@ -144,78 +178,116 @@
             </div>
         </div>
     </section>
+    <script>
+        function confirmStatusChange(userId, checkbox) {
+    Swal.fire({
+        title: 'Konfirmasi Perubahan Status',
+        text: 'Apakah Anda yakin ingin mengubah status pengguna ini?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Ubah',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('status-form-' + userId).submit();
+        } else {
+            checkbox.checked = !checkbox.checked;
+        }
+    });
+}
+
+    </script>
     {{-- js --}}
     <script>
-        function editUser(userId) {
-            const url = `/users/${userId}/edit`; // Endpoint untuk fetch data user
+       function editUser(userId) {
+    const url = `/users/${userId}/edit`; // Endpoint untuk fetch data user
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    // Perbarui form action untuk update
-                    document.getElementById('editUserForm').action = `/users/${userId}`;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('editUserForm').action = `/users/${userId}`;
+            document.getElementById('editName').value = data.user.name;
+            document.getElementById('editEmail').value = data.user.email;
+            document.getElementById('ID-card').value = data.user.IDcard;
 
-                    // Isi data ke input form
-                    document.getElementById('editName').value = data.user.name;
-                    document.getElementById('editEmail').value = data.user.email;
-                    document.getElementById('ID-card').value = data.user.IDcard;
-
-                    // Kosongkan dropdown role sebelum diisi ulang
-                    const roleSelect = document.getElementById('editRole');
-                    roleSelect.innerHTML = `<option value="" disabled>Pilih Role</option>`;
-
-                    // Tambahkan opsi role ke dropdown
-                    data.roles.forEach(role => {
-                        const option = document.createElement('option');
-                        option.value = role.name;
-                        option.textContent = role.name.charAt(0).toUpperCase() + role.name.slice(1);
-
-                        // Disable role yang sudah dimiliki
-                        if (data.userRoles.includes(role.name)) {
-                            option.disabled = true;
-                            option.selected = true; // Pilih role yang sudah dimiliki
-                        }
-
-                        roleSelect.appendChild(option);
-                    });
-
-                    // Simpan role saat ini untuk perbandingan nanti
-                    roleSelect.dataset.originalRoles = JSON.stringify(data.userRoles);
-
-                    // Tampilkan modal
-                    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-                    modal.show();
-                })
-                .catch(error => console.error('Error fetching user data:', error));
-        }
-
-        // Tambahkan event listener pada form submit untuk konfirmasi
-        document.getElementById('editUserForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
+            // Kosongkan dropdown role sebelum diisi ulang
             const roleSelect = document.getElementById('editRole');
-            const selectedRoles = Array.from(roleSelect.selectedOptions).map(option => option.value);
-            const originalRoles = JSON.parse(roleSelect.dataset.originalRoles || '[]');
+            roleSelect.innerHTML = `<option value="" disabled selected>Pilih Role</option>`;
 
-            const newRoles = selectedRoles.filter(role => !originalRoles.includes(role));
+            data.roles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role.name;
+                option.textContent = role.name.charAt(0).toUpperCase() + role.name.slice(1);
 
-            if (newRoles.length > 0) {
-                Swal.fire({
-                    title: 'Konfirmasi Perubahan Role',
-                    text: "Role yang sudah dipilih tidak dapat dihapus setelah disimpan. Apakah Anda yakin?",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ya, Lanjutkan',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('editUserForm').submit();
-                    }
-                });
-            } else {
+                // Jika role sudah dimiliki, disable dan pilih opsi tersebut
+                if (data.userRoles.includes(role.name)) {
+                    option.disabled = true;
+                    option.selected = true;
+                }
+
+                roleSelect.appendChild(option);
+            });
+
+            // Kosongkan dropdown kategori sebelum diisi ulang
+            const kategoriSelect = document.getElementById('editKategori');
+            kategoriSelect.innerHTML = `<option value="" disabled selected>Pilih Kategori</option>`;
+
+            data.categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.nama_kategori;
+
+                // Tandai kategori yang sudah dipilih oleh user dan disable
+                if (data.userCategories.includes(category.id)) {
+                    option.disabled = true;  // Disable kategori yang sudah dipilih
+                    option.selected = true;  // Pilih kategori yang sudah dimiliki
+                }
+
+                kategoriSelect.appendChild(option);
+            });
+
+            // Tampilkan modal
+            const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            modal.show();
+        })
+        .catch(error => console.error('Error fetching user data:', error));
+}
+
+
+
+        document.getElementById('editUserForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const roleSelect = document.getElementById('editRole');
+    const selectedRoles = Array.from(roleSelect.selectedOptions).map(option => option.value);
+    const originalRoles = JSON.parse(roleSelect.dataset.originalRoles || '[]');
+
+    const kategoriSelect = document.getElementById('editKategori');
+    const selectedKategori = kategoriSelect.value;  // Mengambil nilai kategori yang dipilih
+
+    const newRoles = selectedRoles.filter(role => !originalRoles.includes(role));
+
+    // Periksa apakah ada role baru atau kategori baru yang ingin ditambahkan
+    if (newRoles.length > 0 || selectedKategori) {
+        Swal.fire({
+            title: 'Konfirmasi Perubahan',
+            text: newRoles.length > 0
+                ? "Role yang sudah dipilih tidak dapat dihapus setelah disimpan. Apakah Anda yakin?"
+                : "Apakah Anda yakin ingin menambahkan kategori baru?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
                 document.getElementById('editUserForm').submit();
             }
         });
+    } else {
+        document.getElementById('editUserForm').submit();
+    }
+});
+
     </script>
 
 

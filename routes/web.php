@@ -40,6 +40,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('users/{userId}', [UserController::class, 'update'])->name('users.update');
     Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check-email');
     Route::get('users/{userId}/edit', [UserController::class, 'edit']);
+    Route::put('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
+
 
 
     // kategori route

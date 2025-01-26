@@ -21,25 +21,49 @@ class AuthController extends Controller
         'password' => 'required|string',
     ]);
 
-    // Cek apakah input berupa email atau ID-Card
- // Tentukan field berdasarkan input pengguna
- $fieldType = filter_var($request->loginIdentifier, FILTER_VALIDATE_EMAIL)
- ? 'email'
- : (is_numeric($request->loginIdentifier) && strlen($request->loginIdentifier) <= 8
-     ? 'IDcard'
-     : 'RFID');
+    // Tentukan field berdasarkan input pengguna (hanya email atau ID-card)
+    if (filter_var($request->loginIdentifier, FILTER_VALIDATE_EMAIL)) {
+        $fieldType = 'email';
+    } elseif (is_numeric($request->loginIdentifier) && strlen($request->loginIdentifier) <= 8) {
+        $fieldType = 'IDcard';
+    } else {
+        return back()->withErrors(['loginIdentifier' => 'Gunakan email atau ID Card yang valid.'])->withInput();
+    }
 
     // Cari user berdasarkan email atau ID-card
     $user = User::where($fieldType, $request->loginIdentifier)->first();
 
     if (!$user) {
-        return back()->withErrors(['loginIdentifier' => 'Email,ID-Card atau RFID tidak terdaftar.'])->withInput();
+        return back()->withErrors(['loginIdentifier' => 'Email atau ID-Card tidak terdaftar.'])->withInput();
     }
+
+    // Jika akun tidak aktif dan bukan superadmin, tampilkan error
+    if ($user->status == 0 && !$user->roles->pluck('name')->contains('superadmin')) {
+        return redirect()->back()->with('error', 'Akun Anda telah dinon-aktifkan karena terlalu banyak percobaan login. Hubungi admin untuk mengaktifkan kembali');
+    }
+
+
+    // Periksa jumlah percobaan gagal login dari session
+    $attempts = session()->get('login_attempts_' . $user->id, 0);
+
+    if ($attempts >= 5) {
+        // Nonaktifkan akun jika sudah mencapai batas
+        $user->update(['status' => 0]);
+        session()->forget('login_attempts_' . $user->id);
+        return redirect()->back()->with('error', 'Akun Anda telah dinon-aktifkan karena terlalu banyak percobaan login. Hubungi admin untuk mengaktifkan kembali.');
+    }
+
 
     // Autentikasi pengguna
     if (!Auth::attempt([$fieldType => $request->loginIdentifier, 'password' => $request->password])) {
-        return redirect()->back()->with('error', 'Email/ID-Card atau password salah.');
+        session()->put('login_attempts_' . $user->id, $attempts + 1);
+        return back()->withErrors([
+            'loginIdentifier' => "Email/ID-Card atau password salah. Percobaan ke-" . ($attempts + 1) . " dari 5."
+        ])->withInput();
     }
+
+    // Reset percobaan gagal setelah login berhasil
+    session()->forget('login_attempts_' . $user->id);
 
     // Perbarui waktu login terakhir
     $user->update(['last_login' => now()]);
@@ -57,7 +81,6 @@ class AuthController extends Controller
         return redirect()->route('submissions.index')->with('login-sukses', "Login berhasil sebagai {$userRoles}!");
     }
 
-
     if (in_array('approved', $roles)) {
         return redirect()->route('submissions.index')->with('login-sukses', 'Login berhasil sebagai Approved!');
     }
@@ -70,6 +93,8 @@ class AuthController extends Controller
     Auth::logout();
     return redirect()->route('login')->withErrors(['error' => 'Role Anda tidak dikenali. Silakan hubungi administrator.']);
 }
+
+
 
 
 

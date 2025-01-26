@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-     /**
+    /**
      * Get role ID from role name.
      */
     private function getDepartementID($departement_name)
@@ -27,7 +27,7 @@ class UserController extends Controller
         $roles = Role::where('name', '!=', 'superadmin')->get();
 
         // Ambil semua user yang tidak memiliki role superadmin
-        $users = User::with('roles')
+        $users = User::with('roles', 'kategoris')
             ->whereDoesntHave('roles', function ($query) {
                 $query->where('name', 'superadmin');
             })
@@ -37,17 +37,18 @@ class UserController extends Controller
     }
 
 
+
     /**
      * Show the form for creating a new resource.
      */
     public function create()
-{
-    $roles = Role::where('name', '!=', 'superadmin')->get();
-    $users = User::with('roles')->get(); // Ambil semua user beserta role mereka
-    $categories = Kategori::all(); // Ambil semua kategori dari tabel kategori
+    {
+        $roles = Role::where('name', '!=', 'superadmin')->get();
+        $users = User::with('roles')->get(); // Ambil semua user beserta role mereka
+        $categories = Kategori::all(); // Ambil semua kategori dari tabel kategori
 
-    return view('Pages.Users.create', compact('roles', 'users', 'categories'));
-}
+        return view('Pages.Users.create', compact('roles', 'users', 'categories'));
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -59,7 +60,6 @@ class UserController extends Controller
             'ID-card' => 'required|string|max:8|unique:tbl_users,IDcard',
             'email' => 'required|string|email|max:100|unique:tbl_users,email',
             'rfid' => 'required|string|max:20|unique:tbl_users,rfid',
-            'password' => 'required|string|min:8',
             'role' => 'required|in:prepared,Check1,Check2,approved,viewer',
             'kategori_id' => [
                 'nullable',
@@ -81,20 +81,27 @@ class UserController extends Controller
             ],
         ]);
 
+        // Generate password based on ID Card securely
+        $generatedPassword = Hash::make($request->input('ID-card'));
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'IDcard' => $request->input('ID-card'),
             'RFID' => $request->rfid,
-            'id_kategori' => $request->role == 'approved' || $request->role == 'viewer' ? null : $request->kategori_id,
             'id_departement' => $request->role == 'approved' || $request->role == 'viewer' ? null : $this->getDepartementID($request->departement),
-            'password' => Hash::make($request->password),
+            'password' => $generatedPassword,
         ]);
 
         // Attach role to user
         $roleId = Role::where('name', $request->role)->value('id');
         if ($roleId) {
             $user->roles()->attach($roleId);
+        }
+
+        if ($request->filled('kategori_id')) {
+            $kategoriIds = Kategori::whereIn('id', (array) $request->kategori_id)->pluck('id')->toArray();
+            $user->kategoris()->attach($kategoriIds);
         }
 
         return redirect()->route('users.index')->with('success', 'User baru berhasil dibuat.');
@@ -114,12 +121,21 @@ class UserController extends Controller
         $roles = Role::where('name', '!=', 'superadmin')->get(); // Ambil semua role kecuali superadmin
         $userRoles = $user->roles->pluck('name')->toArray(); // Ambil role yang dimiliki user
 
+        // Ambil semua kategori yang tersedia
+        $categories = Kategori::all();
+
+        // Ambil kategori yang sudah dimiliki oleh user
+        $userCategories = $user->kategoris->pluck('id')->toArray();
+
         return response()->json([
             'user' => $user,
             'roles' => $roles,
+            'categories' => $categories,
             'userRoles' => $userRoles,
+            'userCategories' => $userCategories, // Kirim kategori yang dimiliki oleh user
         ]);
     }
+
 
     public function editID($userId)
     {
@@ -136,7 +152,6 @@ class UserController extends Controller
 
     }
 
-
     public function update(Request $request, $userId)
     {
         $request->validate([
@@ -145,6 +160,7 @@ class UserController extends Controller
             'ID-card' => 'nullable|string|max:50|unique:tbl_users,IDcard,' . $userId,
             'password' => 'nullable|string|min:8',
             'role' => 'nullable|in:prepared,Check1,Check2,approved,viewer',
+            'kategori_id' => 'nullable|exists:tbl_kategori,id', // Validasi kategori harus ada di tabel
         ]);
 
         $user = User::findOrFail($userId);
@@ -158,7 +174,7 @@ class UserController extends Controller
 
         $user->save();
 
-        // Cek apakah role sudah ada pada user sebelum menambahkannya
+        // Tambahkan role jika dipilih
         if ($request->role) {
             $roleId = Role::where('name', $request->role)->value('id');
 
@@ -170,8 +186,33 @@ class UserController extends Controller
             }
         }
 
+        // Tambahkan kategori baru jika dipilih
+        if ($request->filled('kategori_id')) {
+            $kategoriId = $request->kategori_id;
+
+            // Cek apakah kategori sudah dimiliki oleh user
+            if (!$user->kategoris->pluck('id')->contains($kategoriId)) {
+                $user->kategoris()->attach($kategoriId);
+                return redirect()->route('users.index')->with('success', 'Kategori baru berhasil ditambahkan.');
+            } else {
+                return redirect()->route('users.index')->with('error', 'Kategori sudah dimiliki oleh pengguna.');
+            }
+        }
+
         return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
     }
+
+
+    public function toggleStatus($id)
+{
+    $user = User::findOrFail($id);
+
+    // Toggle status
+    $user->status = !$user->status;
+    $user->save();
+
+    return redirect()->back()->with('success', 'Status pengguna berhasil diperbarui.');
+}
 
 
 }

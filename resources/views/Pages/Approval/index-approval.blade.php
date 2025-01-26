@@ -262,7 +262,7 @@
 
                                 <!-- Remark Input -->
                                 <div class="mt-3" id="remarkContainer">
-                                    <label for="remark">Remark:<small class="text-danger"> Required if NO</small></label>
+                                    <label for="remark">Remark:<small class="text-danger"> Diperlukan jika Rejected</small></label>
                                     <textarea id="remark" class="form-control" rows="3" placeholder="Enter your remark"></textarea>
                                 </div>
                             </div>

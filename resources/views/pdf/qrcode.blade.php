@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Approval QR Codes</title>
-     <link href="{{ asset('assets/img/icon-kbi.png') }}" rel="icon">
+    <link href="{{ asset('assets/img/icon-kbi.png') }}" rel="icon">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
@@ -13,12 +14,6 @@
             background-color: #f4f4f4;
             color: #333;
             padding: 30px;
-        }
-
-        .logo {
-            width: 200px;
-            margin: 0 auto 20px;
-            display: block;
         }
 
         .container {
@@ -30,13 +25,30 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
+            position: relative;
         }
 
-        h2 {
-            font-size: 32px;
-            color: #2c3e50;
-            margin-bottom: 30px;
+        .header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .header h1 {
+            font-size: 30px;
             font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .header p {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin: 5px 0 20px;
+        }
+
+        .logo {
+            width: 200px;
+            margin-bottom: 20px;
         }
 
         table {
@@ -81,6 +93,13 @@
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
 
+        .label {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
         .footer {
             margin-top: 40px;
             font-size: 16px;
@@ -88,18 +107,36 @@
             font-weight: 400;
         }
 
-        .label {
-            font-weight: bold;
+        .doc-info {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            text-align: left;
+            font-size: 14px;
             color: #2c3e50;
-            font-size: 18px;
-            margin-top: 10px;
+        }
+
+        .doc-info p {
+            margin: 5px 0;
+            font-weight: 600;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <img src="{{ asset('assets/img/kyoraku-baru.png') }}" alt="Company Logo" class="logo">
-        <h2>Approval QR Codes</h2>
+        <!-- Informasi dokumen di pojok kanan atas -->
+
+        <div class="header">
+            <img src="{{ asset('assets/img/kyoraku-baru.png') }}" alt="Company Logo" class="logo">
+            <h1>Approval QR Codes</h1>
+            <p>Pindai untuk memverifikasi persetujuan dokumen</p>
+        </div>
+        <div class="doc-info mb-4">
+            <p>Dokumen : <span>{{ $submission->title }}</span></p>
+            <p>No.Dokumen : <span>{{ $submission->no_transaksi }}</span></p>
+        </div>
+
         <table>
             <tr>
                 <th>Prepare</th>
@@ -134,9 +171,11 @@
                 </td>
             </tr>
         </table>
+
         <div class="footer">
             &copy; {{ date('Y') }} - HRGA System | All Rights Reserved.
         </div>
     </div>
 </body>
+
 </html>
