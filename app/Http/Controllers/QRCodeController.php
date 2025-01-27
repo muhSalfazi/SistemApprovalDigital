@@ -80,7 +80,7 @@ class QRCodeController extends Controller
             $image = $request->file('qr_image');
 
             // Gunakan ZXing untuk membaca QR Code dari file yang diunggah
-            $qrcodeReader = new \Zxing\QrReader($image->getRealPath());
+            $qrcodeReader = new QrReader($image->getRealPath());
             $decodedText = $qrcodeReader->text();
 
             if ($decodedText) {
