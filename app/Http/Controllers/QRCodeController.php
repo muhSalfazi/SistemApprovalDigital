@@ -46,6 +46,11 @@ class QRCodeController extends Controller
                 'approved_by' => $approvedBy
             ]);
 
+            // Periksa apakah approved_by memiliki nilai 'Pending'
+            if (strcasecmp($approvedBy, 'Pending') === 0) {
+                return redirect()->route('validate.qrcode')->with('error', 'Dokumen belum di-approve. Harap menunggu proses persetujuan.');
+            }
+
             // Cek apakah nomor transaksi tersedia di database
             $submission = Submission::where('no_transaksi', $noTransaksi)->first();
 
@@ -89,7 +94,7 @@ class QRCodeController extends Controller
                     $parts = explode('|', $decryptedData);
 
                     if (count($parts) !== 4) {
-                        return redirect()->route('validate.qrcode')->with('error', 'QR Code tidak valid.');
+                        return response()->json(['success' => false, 'message' => 'QR Code tidak valid.']);
                     }
 
                     $role = trim($parts[0]);
@@ -102,36 +107,52 @@ class QRCodeController extends Controller
                         'approved_by' => $approvedBy
                     ]);
 
+                    // Cek apakah status disetujui adalah "Pending"
+                    if (strcasecmp($approvedBy, 'Pending') === 0) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Dokumen belum di-approve. Harap menunggu proses persetujuan.'
+                        ]);
+                    }
+
                     // Cek apakah nomor transaksi tersedia di database
                     $submission = Submission::where('no_transaksi', $noTransaksi)->first();
 
                     $validRoles = ['Prepare', 'Check1', 'Check2', 'Approved'];
 
                     if ($submission && in_array($role, $validRoles)) {
-                        return redirect()->route('validate.qrcode')->with('success', "Validasi Berhasil! Peran: {$role}, No.Doc: {$noTransaksi}, Disetujui oleh: {$approvedBy}");
+                        return response()->json([
+                            'success' => true,
+                            'message' => "Validasi Berhasil! Peran: {$role}, No.Doc: {$noTransaksi}, Disetujui oleh: {$approvedBy}"
+                        ]);
                     } else {
-                        return redirect()->route('validate.qrcode')->with('error', 'Data QR Code tidak dikenali.');
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Data QR Code tidak dikenali.'
+                        ]);
                     }
 
                 } catch (\Exception $e) {
                     \Log::error('Decryption Error:', ['error' => $e->getMessage()]);
-                    return redirect()->route('validate.qrcode')->with('error', 'QR Code tidak valid atau terenkripsi salah.');
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'QR Code tidak valid atau terenkripsi salah.'
+                    ]);
                 }
             } else {
-                return redirect()->route('validate.qrcode')->with('error', 'QR Code tidak dapat dibaca.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'QR Code tidak dapat dibaca.'
+                ]);
             }
 
         } catch (\Exception $e) {
             \Log::error('Error while processing QR Code:', ['error' => $e->getMessage()]);
-            return redirect()->route('validate.qrcode')->with('error', 'Terjadi kesalahan saat memproses gambar.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memproses gambar.'
+            ]);
         }
     }
-
-
-
-
-
-
-
 
 }

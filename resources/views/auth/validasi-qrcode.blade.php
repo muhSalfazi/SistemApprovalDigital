@@ -105,6 +105,58 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            let formData = new FormData(this);
+            let submitButton = document.querySelector('#uploadForm button[type="submit"]');
+            submitButton.innerHTML = '<i class="bi bi-upload"></i> Mengupload...';
+            submitButton.disabled = true;
+
+            fetch("{{ route('upload.qrcode') }}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    submitButton.innerHTML = '<i class="bi bi-upload"></i> Upload dan Validasi';
+                    submitButton.disabled = false;
+
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: data.message,
+                            showConfirmButton: true,
+                            timer: 10000,
+                            timerProgressBar: true,
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: data.message,
+                            showConfirmButton: true,
+                        });
+                    }
+                })
+                .catch(error => {
+                    submitButton.innerHTML = '<i class="bi bi-upload"></i> Upload dan Validasi';
+                    submitButton.disabled = false;
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops!',
+                        text: 'Terjadi kesalahan saat memproses gambar.',
+                        confirmButtonText: 'OK'
+                    });
+                });
+        });
+
         function toggleMethod(method) {
             if (method === 'scan') {
                 document.getElementById('scan-method').classList.remove('d-none');
@@ -300,7 +352,7 @@
             box-shadow: 0 8px 20px rgba(0, 91, 187, 0.3);
         }
     </style>
-    
+
     {{-- sweetalert --}}
     <script>
         @if (session('success'))
