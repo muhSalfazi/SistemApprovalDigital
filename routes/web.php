@@ -24,9 +24,14 @@ use App\Http\Controllers\QRCodeController;
 
 Route::get('/validate-qrcode', [QrCodeController::class, 'showqr'])->name('validate.qrcode');
 Route::post('/validate-qrcode', [QrCodeController::class, 'validateQRCode']);
+Route::post('/upload-qr', [QRCodeController::class, 'uploadQRCode'])->name('upload.qrcode');
+
 
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/login-rfid', [AuthController::class, 'showLoginRFID'])->name('login-rfid');
+// methodpost
 Route::post('/login', [AuthController::class, 'login'])->name('postlogin');
+Route::post('/validate-rfid', [AuthController::class, 'loginrfid'])->name('postloginrfid');
 
 Route::middleware(['auth'])->group(function () {
     //    untuk logout

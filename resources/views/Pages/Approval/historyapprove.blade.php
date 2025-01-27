@@ -85,7 +85,7 @@
                                         @endphp
                                         @if ($check1Approval)
                                             {{ $check1Approval->user->name ?? 'Unknown' }}<br>
-                                            {{ $check1Approval->approved_date ? \Carbon\Carbon::parse($check1Approval->approved_date)->format('d M Y H:i:s') : 'N/A' }}
+                                            {{ $check1Approval->approved_date ? \Carbon\Carbon::parse($check1Approval->approved_date)->format('d M Y H:i:s') : 'N/A' }}<br>
                                             <span
                                                 class="badge bg-{{ $check1Approval->status === 'approved' ? 'success' : 'danger' }}"
                                                 style="font-size: 0.775rem; padding: 3px 8px;">
@@ -106,7 +106,7 @@
                                         @endphp
                                         @if ($check2Approval)
                                             {{ $check2Approval->user->name ?? 'Unknown' }}<br>
-                                            {{ $check2Approval->approved_date ? \Carbon\Carbon::parse($check2Approval->approved_date)->format('d M Y H:i:s') : 'N/A' }}
+                                            {{ $check2Approval->approved_date ? \Carbon\Carbon::parse($check2Approval->approved_date)->format('d M Y H:i:s') : 'N/A' }}<br>
                                             <span
                                                 class="badge bg-{{ $check2Approval->status === 'approved' ? 'success' : 'danger' }}"
                                                 style="font-size: 0.775rem; padding: 3px 8px;">
@@ -127,7 +127,7 @@
                                         @endphp
                                         @if ($approvedApproval)
                                             {{ $approvedApproval->user->name ?? 'Unknown' }}<br>
-                                            {{ $approvedApproval->approved_date ? \Carbon\Carbon::parse($approvedApproval->approved_date)->format('d M Y H:i:s') : 'N/A' }}
+                                            {{ $approvedApproval->approved_date ? \Carbon\Carbon::parse($approvedApproval->approved_date)->format('d M Y H:i:s') : 'N/A' }}<br>
                                             <span
                                                 class="badge bg-{{ $approvedApproval->status === 'approved' ? 'success' : 'danger' }}"
                                                 style="font-size: 0.775rem; padding: 3px 8px;">
@@ -153,13 +153,10 @@
                                             </td>
                                         @endif
                                     @endif
-
                                 </tr>
                             @endforeach
-
                         </tbody>
                     </table>
-
                 </div>
             </div>
         </div>

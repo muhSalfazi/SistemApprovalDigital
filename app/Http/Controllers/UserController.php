@@ -154,30 +154,44 @@ class UserController extends Controller
 
     public function update(Request $request, $userId)
     {
+        $user = User::findOrFail($userId);
+
+        // Validasi data
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:tbl_users,email,' . $userId,
             'ID-card' => 'nullable|string|max:50|unique:tbl_users,IDcard,' . $userId,
             'password' => 'nullable|string|min:8',
             'role' => 'nullable|in:prepared,Check1,Check2,approved,viewer',
-            'kategori_id' => 'nullable|exists:tbl_kategori,id', // Validasi kategori harus ada di tabel
+            'kategori_id' => 'nullable|exists:tbl_kategori,id',
         ]);
 
-        $user = User::findOrFail($userId);
-        $user->name = $request->name;
-        $user->email = $request->email;
+        // Mencegah perubahan nama dan email
+        if ($request->name !== $user->name || $request->email !== $user->email) {
+            return redirect()->route('users.index')->with('error', 'Nama dan Email tidak dapat diubah.');
+        }
+
+        // Cek jika ID-card ingin diubah dan sudah ada di pengguna lain
+        if ($request->input('ID-card') !== $user->IDcard) {
+            $existingUser = User::where('IDcard', $request->input('ID-card'))->first();
+            if ($existingUser) {
+                return redirect()->route('users.index')
+                    ->with('error', "ID-card sudah digunakan oleh pengguna lain");
+            }
+        }
+
+        // Update data yang diperbolehkan
         $user->IDcard = $request->input('ID-card');
 
-        if ($request->password) {
+        if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
 
         $user->save();
 
-        // Tambahkan role jika dipilih
+        // Update role jika dipilih
         if ($request->role) {
             $roleId = Role::where('name', $request->role)->value('id');
-
             if ($roleId && !$user->roles->pluck('id')->contains($roleId)) {
                 $user->roles()->attach($roleId);
                 return redirect()->route('users.index')->with('success', 'User berhasil diperbarui dan role ditambahkan.');
@@ -189,8 +203,6 @@ class UserController extends Controller
         // Tambahkan kategori baru jika dipilih
         if ($request->filled('kategori_id')) {
             $kategoriId = $request->kategori_id;
-
-            // Cek apakah kategori sudah dimiliki oleh user
             if (!$user->kategoris->pluck('id')->contains($kategoriId)) {
                 $user->kategoris()->attach($kategoriId);
                 return redirect()->route('users.index')->with('success', 'Kategori baru berhasil ditambahkan.');
@@ -203,16 +215,18 @@ class UserController extends Controller
     }
 
 
+
+
     public function toggleStatus($id)
-{
-    $user = User::findOrFail($id);
+    {
+        $user = User::findOrFail($id);
 
-    // Toggle status
-    $user->status = !$user->status;
-    $user->save();
+        // Toggle status
+        $user->status = !$user->status;
+        $user->save();
 
-    return redirect()->back()->with('success', 'Status pengguna berhasil diperbarui.');
-}
+        return redirect()->back()->with('success', 'Status pengguna berhasil diperbarui.');
+    }
 
 
 }

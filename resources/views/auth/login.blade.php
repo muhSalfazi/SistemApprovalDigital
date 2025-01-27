@@ -99,12 +99,29 @@
                                             </div>
                                         </div>
 
-                                        <div class="d-grid">
-                                            <button type="submit" class="btn btn-primary fw-bold">Login</button>
-                                            <a href="{{ route('validate.qrcode') }}"
-                                                class="btn btn-outline-primary fw-bold mt-3">
-                                                <i class="bi bi-qr-code-scan"></i> Scan QR Code
-                                            </a>
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-primary fw-bold w-100"
+                                                    style="font-size: 0.875rem; padding: 4px 8px;">
+                                                    Login
+                                                </button>
+                                            </div>
+                                            <div class="col-6">
+                                                <a href="{{ route('validate.qrcode') }}"
+                                                    class="btn btn-outline-success fw-bold w-100"
+                                                    style="font-size: 0.775rem; padding: 3px 8px;">
+                                                    <i class="bi bi-qr-code-scan"></i> Verifikasi QR Code
+                                                </a>
+                                            </div>
+                                            <div class="col-6">
+                                                <a href="{{ route('login-rfid') }}"
+                                                    class="btn btn-outline-success fw-bold w-100"
+                                                    style="font-size: 0.775rem; padding: 3px 8px;">
+                                                    <i class="bi bi-credit-card"></i> Login RFID
+                                                </a>
+                                            </div>
+                                        </div>
+
                                     </form>
 
                                     {{-- js hidden+show PW --}}
@@ -155,14 +172,18 @@
                 icon: 'success',
                 title: 'Berhasil',
                 text: '{!! session('success') !!}',
-                // timer: 1500,
+                width: '400px', // Ukuran popup medium
+                padding: '20px',
                 timerProgressBar: true,
                 showClass: {
-                    popup: 'animate__animated animate__bounceInDown' // Menambahkan animasi muncul
+                    popup: 'animate__animated animate__fadeInDown'
                 },
                 hideClass: {
-                    popup: 'animate__animated animate__fadeOutUp' // Menambahkan animasi saat ditutup
+                    popup: 'animate__animated animate__fadeOutUp'
                 },
+                customClass: {
+                    popup: 'small-swal-popup'
+                }
             });
         @endif
 
@@ -171,30 +192,38 @@
                 icon: 'error',
                 title: 'Gagal',
                 text: '{!! session('error') !!}',
-                // timer: 1500,
+                width: '400px', // Ukuran popup medium
+                padding: '20px',
                 confirmButtonText: 'OK',
                 timerProgressBar: true,
                 showClass: {
-                    popup: 'animate__animated animate__fadeIn' // Animasi muncul
+                    popup: 'animate__animated animate__fadeIn'
                 },
                 hideClass: {
-                    popup: 'animate__animated animate__zoomOut' // Animasi saat ditutup
+                    popup: 'animate__animated animate__zoomOut'
                 },
+                customClass: {
+                    popup: 'small-swal-popup'
+                }
             }).then((result) => {
                 if (result.dismiss === Swal.DismissReason.confirmButtonText) {
                     Swal.fire({
                         icon: 'info',
                         title: 'Informasi',
                         text: 'Silakan isi form kembali.',
-                        // confirmButtonText: 'OK',
+                        width: '350px', // Ukuran popup kecil
+                        padding: '15px',
                         timer: 1800,
                         timerProgressBar: true,
                         showClass: {
-                            popup: 'animate__animated animate__fadeIn' // Animasi muncul
+                            popup: 'animate__animated animate__fadeIn'
                         },
                         hideClass: {
-                            popup: 'animate__animated animate__zoomOut' // Animasi saat ditutup
+                            popup: 'animate__animated animate__zoomOut'
                         },
+                        customClass: {
+                            popup: 'small-swal-popup'
+                        }
                     });
                 }
             });
@@ -202,17 +231,94 @@
 
         @if (session('alert'))
             Swal.fire({
-                icon: '{{ session('alert.type') }}', // Tipe alert (success, warning, error, info)
+                icon: '{{ session('alert.type') }}',
                 title: 'Pemberitahuan',
                 text: '{{ session('alert.message') }}',
+                width: '400px', // Ukuran popup medium
+                padding: '20px',
+                customClass: {
+                    popup: 'small-swal-popup'
+                }
             });
         @endif
     </script>
+
     <style>
+        /* CSS untuk mengatur ukuran swal agar lebih modern */
         .small-swal-popup {
-            width: 300px !important;
+            font-size: 14px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .swal2-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .swal2-popup {
+            border-radius: 10px;
+        }
+
+        .swal2-confirm {
+            background-color: #28a745 !important;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        .swal2-cancel {
+            background-color: #dc3545 !important;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        /* Responsif untuk tampilan mobile */
+        @media (max-width: 576px) {
+            .swal2-popup {
+                width: 320px !important;
+                /* Untuk tampilan mobile */
+            }
         }
     </style>
+
+
+    {{-- refresh halaman --}}
+    <script>
+        let idleTime = 0;
+
+        // Reset idle timer saat pengguna berinteraksi
+        function resetIdleTime() {
+            idleTime = 0;
+        }
+
+        // Deteksi aktivitas pengguna (desktop dan mobile)
+        document.addEventListener('mousemove', resetIdleTime); // Desktop: Mouse bergerak
+        document.addEventListener('keypress', resetIdleTime); // Desktop: Ketik keyboard
+        document.addEventListener('scroll', resetIdleTime); // Semua: Scroll halaman
+        document.addEventListener('click', resetIdleTime); // Semua: Klik layar
+        document.addEventListener('touchstart', resetIdleTime); // Mobile/Tablet: Sentuhan awal
+        document.addEventListener('touchmove', resetIdleTime); // Mobile/Tablet: Sentuhan bergerak
+
+        // Cek setiap 1 menit jika pengguna idle selama 5 menit
+        setInterval(function() {
+            idleTime++;
+            if (idleTime >= 5) { // 5 menit tidak ada aktivitas
+                Swal.fire({
+                    title: "Perhatian",
+                    text: "Anda tidak melakukan aktivitas selama 5 menit. Halaman akan direfresh, ingin tetap di halaman ini?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Ya, Lanjutkan",
+                    cancelButtonText: "Tidak",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                });
+            }
+        }, 300000); // Cek setiap 5 menit
+    </script>
+    {{-- end --}}
 </body>
 
 </html>

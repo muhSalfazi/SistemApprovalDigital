@@ -3,7 +3,7 @@
         'name' => 'laravel/laravel',
         'pretty_version' => 'dev-slmndev',
         'version' => 'dev-slmndev',
-        'reference' => '25341fe0db43fa84dbbafb45b8c768fa7dba51cc',
+        'reference' => '295e7208e95fa55eeb25c1b2fdbc57e27115b92d',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -481,6 +481,15 @@
                 0 => 'v10.48.25',
             ),
         ),
+        'khanamiryan/qrcode-detector-decoder' => array(
+            'pretty_version' => '2.0.2',
+            'version' => '2.0.2.0',
+            'reference' => '8d53cbecaa32f1e56a3be58bb3055ac31774ecd0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../khanamiryan/qrcode-detector-decoder',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'kodova/hamcrest-php' => array(
             'dev_requirement' => true,
             'replaced' => array(
@@ -499,7 +508,7 @@
         'laravel/laravel' => array(
             'pretty_version' => 'dev-slmndev',
             'version' => 'dev-slmndev',
-            'reference' => '25341fe0db43fa84dbbafb45b8c768fa7dba51cc',
+            'reference' => '295e7208e95fa55eeb25c1b2fdbc57e27115b92d',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

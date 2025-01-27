@@ -20,18 +20,32 @@ class ApprovalController extends Controller
                 $query->when($roleNames->contains('prepared'), function ($query) use ($user) {
                     $query->where('id_user', $user->id); // Filter berdasarkan user logged-in
                 })
-                    ->when($roleNames->contains('viewer'), function ($query) {
-                        $query->whereHas('approvals', function ($subQuery) {
-                            $subQuery->whereHas('user.roles', function ($roleQuery) {
-                                $roleQuery->where('name', 'approved'); // Pastikan submission telah disetujui
-                            })->where('status', 'approved'); // Status approval harus 'approved'
-                        });
+                ->when($roleNames->contains('viewer'), function ($query) {
+                    $query->whereHas('approvals', function ($subQuery) {
+                        $subQuery->whereHas('user.roles', function ($roleQuery) {
+                            $roleQuery->where('name', 'approved'); // Pastikan submission telah disetujui
+                        })->where('status', 'approved'); // Status approval harus 'approved'
                     });
-            }) // Jika superadmin, tidak ada filter tambahan
+                })
+                ->whereHas('approvals', function ($query) use ($user) {
+                    $query->whereHas('user.roles', function ($roleQuery) {
+                        $roleQuery->whereIn('name', ['Check1', 'Check2']);
+                    })
+                    ->whereHas('user.departement', function ($depQuery) use ($user) {
+                        $depQuery->where('id_departement', $user->id_departement);  // Filter sesuai departemen user
+                    })
+                    ->whereHas('user.kategoris', function ($katQuery) use ($user) {
+                        $katQuery->whereIn('kategori_id', $user->kategoris->pluck('id')->toArray()); // Filter kategori user (many-to-many)
+                    })
+                    ->whereNotNull('approved_date'); // Hanya yang sudah diapprove
+                });
+            }) // Jika superadmin, semua data akan ditampilkan tanpa filter
             ->get();
 
         return view('Pages.Approval.historyapprove', compact('submissions', 'roleNames'));
     }
+
+
 
 
     public function store(Request $request)
@@ -168,8 +182,7 @@ class ApprovalController extends Controller
             'canApprove' => $canApprove, // Apakah form harus ditampilkan
         ]);
     }
-
-
+    
     public function getApprovalTable($submissionId)
     {
         try {

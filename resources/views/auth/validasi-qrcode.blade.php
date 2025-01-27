@@ -7,14 +7,12 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Login - Approval System</title>
-    <meta content="" name="description">
-    <meta content="" name="keywords">
 
     <!-- Favicons -->
     <link href="{{ asset('assets/img/icon-kbi.png') }}" rel="icon">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap CSS -->
     <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -34,67 +32,117 @@
     <main class="container my-5">
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <div class="card shadow-lg border-0 rounded">
-                    <div class="card-body">
-                        <img src="{{ asset('assets/img/kyoraku-baru.png') }}" alt="Company Logo" class="logo mt-1">
-                        <h5 class="card-title text-center fw-bold text-secondary  mb-1">HRGA System Scan QR Code</h5>
+                <div class="card shadow-lg border-0 rounded-4 p-4 animate__animated animate__fadeInUp">
+                    <div class="text-center">
+                        <img src="{{ asset('assets/img/kyoraku-baru.png') }}" alt="Company Logo" class="logo mt-3">
+                        <h5 class="mt-3 fw-bold text-dark">HRGA SYSTEM</h5>
+                        <p class="text-muted">Silakan pilih metode verifikasi QR Code</p>
+                    </div>
 
-                        {{-- <div id="reader"class="text-center mb-4"
-                            style="width: 100%; max-width: 500px; margin: auto;"></div> --}}
+                    <div class="d-flex justify-content-center mb-3">
+                        <button class="btn btn-outline-primary me-2" onclick="toggleMethod('scan')">
+                            <i class="bi bi-qr-code-scan"></i> Scan QR Code
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="toggleMethod('upload')">
+                            <i class="bi bi-upload"></i> Upload Gambar
+                        </button>
+                    </div>
 
-                        <div id="reader" class="text-center mb-4 mx-auto" style="width: 100%; max-width: 500px;">
+                    <!-- Scan QR Code -->
+                    <div id="scan-method" class="text-center">
+                        <h6 class="text-primary fw-bold mb-3">Scan QR Code Anda</h6>
+                        <div id="reader-container" class="mx-auto">
+                            <div id="reader"></div>
                         </div>
-
-
-                        <form id="qrForm" method="POST" action="{{ route('validate.qrcode') }}" novalidate>
+                        <form id="qrForm" method="POST" action="{{ route('validate.qrcode') }}" class="mt-3">
                             @csrf
-                            <div class="mb-3">
-                                <label for="qrCodeInput" class="form-label fw-semibold">QR Code Data</label>
-                                <input type="text" name="qr_code" id="qrCodeInput" class="form-control text-center"
-                                    required readonly>
-                                <div class="invalid-feedback">QR Code tidak boleh kosong.</div>
+                            <input type="text" name="qr_code" id="qrCodeInput" class="form-control text-center mt-2"
+                                placeholder="Hasil QR Code" required readonly>
+                            <button type="submit" class="btn btn-success w-100 mt-3">
+                                <i class="bi bi-qr-code-scan"></i> Validasi QR Code
+                            </button>
+                        </form>
+                    </div>
+
+
+                    <!-- Upload Gambar QR Code -->
+                    <!-- Upload Gambar QR Code -->
+                    <div id="upload-method" class="d-none">
+                        <h6 class="text-center text-secondary fw-bold">Upload Gambar QR Code</h6>
+                        <form id="uploadForm" method="POST" enctype="multipart/form-data"
+                            action="{{ route('upload.qrcode') }}" class="mt-3">
+                            @csrf
+                            <div class="text-center mb-3">
+                                <input type="file" name="qr_image" id="qrImage" class="form-control"
+                                    accept="image/*" required onchange="previewImage(event)">
+                                <div class="invalid-feedback">Silakan unggah gambar QR Code.</div>
                             </div>
 
-                            <div class="d-grid gap-2">
-                                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg fw-bold">
-                                    Validasi QR Code <i class="bi bi-check-circle-fill"></i>
-                                </button>
-                                <a href="{{ route('login') }}" class="btn btn-outline-secondary fw-bold mt-3">
-                                    <i class="bi bi-arrow-left"></i> Back to Login
-                                </a>
+                            <!-- Thumbnail Preview -->
+                            <div id="imagePreviewContainer" class="text-center d-none">
+                                <img id="imagePreview" class="img-thumbnail rounded shadow-lg"
+                                    alt="Thumbnail Preview" />
                             </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mt-3">
+                                <i class="bi bi-upload"></i> Upload dan Validasi
+                            </button>
                         </form>
+                    </div>
+
+
+                    <div class="text-center mt-3">
+                        <a href="{{ route('login') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Kembali ke Login
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </main>
-
     <!-- QR Code Scanner -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        function toggleMethod(method) {
+            if (method === 'scan') {
+                document.getElementById('scan-method').classList.remove('d-none');
+                document.getElementById('upload-method').classList.add('d-none');
+            } else {
+                document.getElementById('scan-method').classList.add('d-none');
+                document.getElementById('upload-method').classList.remove('d-none');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const qrScanner = new Html5Qrcode("reader");
 
-            // Tentukan ukuran QR box yang fleksibel berdasarkan lebar layar
-            const qrboxSize = window.innerWidth < 768 ? 250 : 400;
+            function getQrBoxSize() {
+                if (window.innerWidth < 768) {
+                    return {
+                        width: 150,
+                        height: 150
+                    }; // Ukuran lebih kecil untuk mobile
+                }
+                return {
+                    width: 250,
+                    height: 250
+                }; // Ukuran default untuk desktop
+            }
 
             qrScanner.start({
                     facingMode: "environment"
-                }, // Gunakan kamera belakang
+                }, // Gunakan kamera belakang jika tersedia
                 {
-                    fps: 15, // Menyesuaikan frame rate
-                    qrbox: {
-                        width: qrboxSize,
-                        height: qrboxSize
-                    }, // Kotak pemindaian
-                    aspectRatio: 1.0 // Menjaga aspek rasio agar kotak tetap proporsional
+                    fps: 15,
+                    qrbox: getQrBoxSize(),
+                    aspectRatio: 1.0,
+                    disableFlip: false, // Pastikan tidak membalik gambar
                 },
                 function onScanSuccess(decodedText) {
                     document.getElementById('qrCodeInput').value = decodedText;
-                    document.getElementById('qrForm').submit();
+                    // document.getElementById('qrForm').submit();
                 },
                 function onScanError(errorMessage) {
                     console.warn(`QR code scan error: ${errorMessage}`);
@@ -107,151 +155,171 @@
                 });
             });
         });
-        // Validasi Form sebelum Submit
-        document.getElementById('qrForm').addEventListener('submit', function(event) {
-            if (document.getElementById('qrCodeInput').value.trim() === "") {
-                event.preventDefault();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Oops!',
-                    text: 'QR Code belum dipindai, silakan scan terlebih dahulu.',
-                });
-            }
-        });
     </script>
-
+    {{-- js Thumbnail --}}
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = e.target.result;
+                    document.getElementById('imagePreviewContainer').classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+    {{-- end --}}
     <!-- Vendor JS Files -->
     <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
     <style>
-        h5 {
-            font-size: 20px;
-            text-transform: uppercase;
-            font-weight: 200;
-            border-radius: 5px;
-            color: #2c3e50;
-        }
-
         body {
-            background: #f5f7fa;
-            font-family: 'Open Sans', sans-serif;
+            background: #f0f2f5;
+            font-family: 'Poppins', sans-serif;
         }
 
         .logo {
-            width: 200px;
-            margin: 0 auto 5px;
-            display: block;
+            width: 150px;
+            margin-bottom: 10px;
         }
 
         .card {
             border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-primary {
+        .btn-outline-primary:hover {
             background-color: #007bff;
-            border-color: #007bff;
-            transition: all 0.3s ease-in-out;
+            color: #fff;
         }
 
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #004085;
+        .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            color: #fff;
         }
 
-        #reader {
+        /* Pastikan layout tengah */
+        #reader-container {
             position: relative;
             width: 100%;
-            max-width: 500px;
-            /* Maksimal untuk desktop */
-            aspect-ratio: 1 / 1;
-            /* Menjaga bentuk kotak */
-            background: rgba(0, 0, 0, 0.8);
-            margin: auto;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 10px;
+            border: 3px dashed #007bff;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
         }
 
-
-        #reader .corner-top-left {
-            top: 8px;
-            left: 5px;
-            border-right: none;
-            border-bottom: none;
+        /* Gaya scanner */
+        #reader {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
         }
 
-        #reader .corner-top-right {
-            top: 10px;
-            right: 6px;
-            border-left: none;
-            border-bottom: none;
-        }
-
-        #reader .corner-bottom-left {
-            bottom: 10px;
-            left: 10px;
-            border-right: none;
-            border-top: none;
-        }
-
-        #reader .corner-bottom-right {
-            bottom: 10px;
-            right: 10px;
-            border-left: none;
-            border-top: none;
-        }
-
+        /* Responsif */
         @media (max-width: 768px) {
-            #reader {
+            #reader-container {
                 max-width: 300px;
-                /* Ukuran lebih kecil untuk mobile */
             }
 
-            #reader .corner-top-left,
-            #reader .corner-top-right,
-            #reader .corner-bottom-left,
-            #reader .corner-bottom-right {
-                width: 30px;
-                height: 30px;
+            #reader {
+                height: 300px;
             }
+        }
+
+        @media (max-width: 480px) {
+            #reader-container {
+                max-width: 250px;
+            }
+
+            #reader {
+                height: 250px;
+            }
+        }
+
+        /* Styling tambahan */
+        #qrCodeInput {
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            font-size: 1rem;
+            padding: 10px;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            font-weight: bold;
+            padding: 12px 20px;
         }
 
 
         @media (max-width: 768px) {
             .logo {
-                width: 150px;
-                /* Perkecil logo untuk tampilan mobile */
+                width: 120px;
             }
 
             h5 {
-                font-size: 16px;
-                /* Sesuaikan ukuran teks */
+                font-size: 18px;
             }
 
             .card {
-                padding: 15px;
-            }
-
-            .btn-lg {
-                font-size: 16px;
-                /* Sesuaikan ukuran tombol */
+                padding: 20px;
             }
         }
-    </style>
 
+        #imagePreview {
+            max-width: 100%;
+            width: 200px;
+            height: auto;
+            margin-top: 10px;
+            border: 3px solid #007bff;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #imagePreview:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-primary {
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            box-shadow: 0 8px 20px rgba(0, 91, 187, 0.3);
+        }
+    </style>
+    
+    {{-- sweetalert --}}
     <script>
         @if (session('success'))
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil',
                 text: '{!! session('success') !!}',
-                // timer: 1500,
+                width: '500px', // Ukuran popup medium
+                padding: '20px',
                 timerProgressBar: true,
                 showClass: {
-                    popup: 'animate__animated animate__bounceInDown' // Menambahkan animasi muncul
+                    popup: 'animate__animated animate__fadeInDown'
                 },
                 hideClass: {
-                    popup: 'animate__animated animate__fadeOutUp' // Menambahkan animasi saat ditutup
+                    popup: 'animate__animated animate__fadeOutUp'
                 },
+                customClass: {
+                    popup: 'small-swal-popup'
+                }
             });
         @endif
 
@@ -260,30 +328,38 @@
                 icon: 'error',
                 title: 'Gagal',
                 text: '{!! session('error') !!}',
-                // timer: 1500,
+                width: '500px', // Ukuran popup medium
+                padding: '20px',
                 confirmButtonText: 'OK',
                 timerProgressBar: true,
                 showClass: {
-                    popup: 'animate__animated animate__fadeIn' // Animasi muncul
+                    popup: 'animate__animated animate__fadeIn'
                 },
                 hideClass: {
-                    popup: 'animate__animated animate__zoomOut' // Animasi saat ditutup
+                    popup: 'animate__animated animate__zoomOut'
                 },
+                customClass: {
+                    popup: 'small-swal-popup'
+                }
             }).then((result) => {
                 if (result.dismiss === Swal.DismissReason.confirmButtonText) {
                     Swal.fire({
                         icon: 'info',
                         title: 'Informasi',
-                        text: 'Silakan isi Scan kembali.',
-                        // confirmButtonText: 'OK',
+                        text: 'Silakan isi Validasi kembali.',
+                        width: '450px', // Ukuran popup kecil
+                        padding: '15px',
                         timer: 1800,
                         timerProgressBar: true,
                         showClass: {
-                            popup: 'animate__animated animate__fadeIn' // Animasi muncul
+                            popup: 'animate__animated animate__fadeIn'
                         },
                         hideClass: {
-                            popup: 'animate__animated animate__zoomOut' // Animasi saat ditutup
+                            popup: 'animate__animated animate__zoomOut'
                         },
+                        customClass: {
+                            popup: 'small-swal-popup'
+                        }
                     });
                 }
             });
@@ -291,12 +367,93 @@
 
         @if (session('alert'))
             Swal.fire({
-                icon: '{{ session('alert.type') }}', // Tipe alert (success, warning, error, info)
+                icon: '{{ session('alert.type') }}',
                 title: 'Pemberitahuan',
                 text: '{{ session('alert.message') }}',
+                width: '400px', // Ukuran popup medium
+                padding: '20px',
+                customClass: {
+                    popup: 'small-swal-popup'
+                }
             });
         @endif
     </script>
+    <style>
+        /* CSS untuk mengatur ukuran swal agar lebih modern */
+        .small-swal-popup {
+            font-size: 14px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .swal2-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .swal2-popup {
+            border-radius: 10px;
+        }
+
+        .swal2-confirm {
+            background-color: #28a745 !important;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        .swal2-cancel {
+            background-color: #dc3545 !important;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        /* Responsif untuk tampilan mobile */
+        @media (max-width: 576px) {
+            .swal2-popup {
+                width: 320px !important;
+                /* Untuk tampilan mobile */
+            }
+        }
+    </style>
+    {{-- endsweetalert --}}
+
+    {{-- refresh halaman --}}
+    <script>
+        let idleTime = 0;
+
+        // Reset idle timer saat pengguna berinteraksi
+        function resetIdleTime() {
+            idleTime = 0;
+        }
+
+        // Deteksi aktivitas pengguna (desktop dan mobile)
+        document.addEventListener('mousemove', resetIdleTime); // Desktop: Mouse bergerak
+        document.addEventListener('keypress', resetIdleTime); // Desktop: Ketik keyboard
+        document.addEventListener('scroll', resetIdleTime); // Semua: Scroll halaman
+        document.addEventListener('click', resetIdleTime); // Semua: Klik layar
+        document.addEventListener('touchstart', resetIdleTime); // Mobile/Tablet: Sentuhan awal
+        document.addEventListener('touchmove', resetIdleTime); // Mobile/Tablet: Sentuhan bergerak
+
+        // Cek setiap 1 menit jika pengguna idle selama 5 menit
+        setInterval(function() {
+            idleTime++;
+            if (idleTime >= 5) { // 5 menit tidak ada aktivitas
+                Swal.fire({
+                    title: "Perhatian",
+                    text: "Anda tidak melakukan aktivitas selama 5 menit. Halaman akan direfresh, ingin tetap di halaman ini?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Ya, Lanjutkan",
+                    cancelButtonText: "Tidak",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                });
+            }
+        }, 300000); // Cek setiap 5 menit
+    </script>
+    {{-- end --}}
 
 </body>
 

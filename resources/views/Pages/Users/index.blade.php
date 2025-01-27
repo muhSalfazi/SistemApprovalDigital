@@ -17,12 +17,24 @@
             {{ session('success') }}
         </div>
     @endif
-    @if (session('error'))
+    {{-- @if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {{ session('error') }}
+    </div>
+@endif --}}
+
+    @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            {{ session('error') }}
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
+
     <section class="section">
 
         <div class="row">
@@ -79,14 +91,17 @@
                                             </td>
                                             <td class="text-center">
                                                 @if (auth()->user()->roles->contains('name', 'superadmin'))
-                                                    <form action="{{ route('users.toggleStatus', $user->id) }}" method="POST" id="status-form-{{ $user->id }}">
+                                                    <form action="{{ route('users.toggleStatus', $user->id) }}"
+                                                        method="POST" id="status-form-{{ $user->id }}">
                                                         @csrf
                                                         @method('PUT')
                                                         <div class="form-check form-switch d-flex justify-content-center">
-                                                            <input type="checkbox" class="form-check-input" id="statusToggle{{ $user->id }}"
+                                                            <input type="checkbox" class="form-check-input"
+                                                                id="statusToggle{{ $user->id }}"
                                                                 onchange="confirmStatusChange({{ $user->id }}, this)"
                                                                 {{ $user->status ? 'checked' : '' }}>
-                                                            <label class="form-check-label" for="statusToggle{{ $user->id }}">
+                                                            <label class="form-check-label"
+                                                                for="statusToggle{{ $user->id }}">
                                                                 {{ $user->status ? 'Active' : 'Inactive' }}
                                                             </label>
                                                         </div>
@@ -141,11 +156,11 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="editName" class="form-label">Name</label>
-                                <input type="text" name="name" id="editName" class="form-control" required>
+                                <input type="text" name="name" id="editName" class="form-control" readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="editEmail" class="form-label">Email</label>
-                                <input type="email" name="email" id="editEmail" class="form-control" required>
+                                <input type="email" name="email" id="editEmail" class="form-control" readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="ID-card" class="form-label">ID-Card</label>
@@ -180,114 +195,104 @@
     </section>
     <script>
         function confirmStatusChange(userId, checkbox) {
-    Swal.fire({
-        title: 'Konfirmasi Perubahan Status',
-        text: 'Apakah Anda yakin ingin mengubah status pengguna ini?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Ubah',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('status-form-' + userId).submit();
-        } else {
-            checkbox.checked = !checkbox.checked;
+            Swal.fire({
+                title: 'Konfirmasi Perubahan Status',
+                text: 'Apakah Anda yakin ingin mengubah status pengguna ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Ubah',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('status-form-' + userId).submit();
+                } else {
+                    checkbox.checked = !checkbox.checked;
+                }
+            });
         }
-    });
-}
-
     </script>
     {{-- js --}}
     <script>
-       function editUser(userId) {
-    const url = `/users/${userId}/edit`; // Endpoint untuk fetch data user
+        function editUser(userId) {
+            const url = `/users/${userId}/edit`; // Endpoint untuk fetch data user
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('editUserForm').action = `/users/${userId}`;
-            document.getElementById('editName').value = data.user.name;
-            document.getElementById('editEmail').value = data.user.email;
-            document.getElementById('ID-card').value = data.user.IDcard;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('editUserForm').action = `/users/${userId}`;
+                    document.getElementById('editName').value = data.user.name;
+                    document.getElementById('editEmail').value = data.user.email;
+                    document.getElementById('ID-card').value = data.user.IDcard;
 
-            // Kosongkan dropdown role sebelum diisi ulang
-            const roleSelect = document.getElementById('editRole');
-            roleSelect.innerHTML = `<option value="" disabled selected>Pilih Role</option>`;
+                    // Kosongkan dropdown role sebelum diisi ulang
+                    const roleSelect = document.getElementById('editRole');
+                    roleSelect.innerHTML = `<option value="" disabled selected>Pilih Role</option>`;
 
-            data.roles.forEach(role => {
-                const option = document.createElement('option');
-                option.value = role.name;
-                option.textContent = role.name.charAt(0).toUpperCase() + role.name.slice(1);
+                    data.roles.forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role.name;
+                        option.textContent = role.name.charAt(0).toUpperCase() + role.name.slice(1);
 
-                // Jika role sudah dimiliki, disable dan pilih opsi tersebut
-                if (data.userRoles.includes(role.name)) {
-                    option.disabled = true;
-                    option.selected = true;
-                }
+                        // Jika role sudah dimiliki, disable dan pilih opsi tersebut
+                        if (data.userRoles.includes(role.name)) {
+                            option.disabled = true;
+                            option.selected = true;
+                        }
 
-                roleSelect.appendChild(option);
-            });
+                        roleSelect.appendChild(option);
+                    });
 
-            // Kosongkan dropdown kategori sebelum diisi ulang
-            const kategoriSelect = document.getElementById('editKategori');
-            kategoriSelect.innerHTML = `<option value="" disabled selected>Pilih Kategori</option>`;
+                    // Kosongkan dropdown kategori sebelum diisi ulang
+                    const kategoriSelect = document.getElementById('editKategori');
+                    kategoriSelect.innerHTML = `<option value="" disabled selected>Pilih Kategori</option>`;
 
-            data.categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category.id;
-                option.textContent = category.nama_kategori;
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.nama_kategori;
 
-                // Tandai kategori yang sudah dipilih oleh user dan disable
-                if (data.userCategories.includes(category.id)) {
-                    option.disabled = true;  // Disable kategori yang sudah dipilih
-                    option.selected = true;  // Pilih kategori yang sudah dimiliki
-                }
+                        // Tandai kategori yang sudah dipilih oleh user dan disable
+                        if (data.userCategories.includes(category.id)) {
+                            option.disabled = true; // Disable kategori yang sudah dipilih
+                            option.selected = true; // Pilih kategori yang sudah dimiliki
+                        }
 
-                kategoriSelect.appendChild(option);
-            });
+                        kategoriSelect.appendChild(option);
+                    });
 
-            // Tampilkan modal
-            const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-            modal.show();
-        })
-        .catch(error => console.error('Error fetching user data:', error));
-}
-
-
+                    // Tampilkan modal
+                    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+                    modal.show();
+                })
+                .catch(error => console.error('Error fetching user data:', error));
+        }
 
         document.getElementById('editUserForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+            event.preventDefault();
 
-    const roleSelect = document.getElementById('editRole');
-    const selectedRoles = Array.from(roleSelect.selectedOptions).map(option => option.value);
-    const originalRoles = JSON.parse(roleSelect.dataset.originalRoles || '[]');
+            const roleSelect = document.getElementById('editRole');
+            const selectedRoles = Array.from(roleSelect.selectedOptions).map(option => option.value);
+            const originalRoles = JSON.parse(roleSelect.dataset.originalRoles || '[]');
 
-    const kategoriSelect = document.getElementById('editKategori');
-    const selectedKategori = kategoriSelect.value;  // Mengambil nilai kategori yang dipilih
+            const kategoriSelect = document.getElementById('editKategori');
+            const selectedKategori = kategoriSelect.value; // Mengambil nilai kategori yang dipilih
 
-    const newRoles = selectedRoles.filter(role => !originalRoles.includes(role));
+            const newRoles = selectedRoles.filter(role => !originalRoles.includes(role));
 
-    // Periksa apakah ada role baru atau kategori baru yang ingin ditambahkan
-    if (newRoles.length > 0 || selectedKategori) {
-        Swal.fire({
-            title: 'Konfirmasi Perubahan',
-            text: newRoles.length > 0
-                ? "Role yang sudah dipilih tidak dapat dihapus setelah disimpan. Apakah Anda yakin?"
-                : "Apakah Anda yakin ingin menambahkan kategori baru?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Lanjutkan',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('editUserForm').submit();
-            }
+            // Periksa apakah ada role baru atau kategori baru yang ingin ditambahkan
+            Swal.fire({
+                title: 'Konfirmasi Perubahan',
+                text: "Apakah Anda yakin semua data sudah diisi dengan benar?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Lanjutkan',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('editUserForm').submit();
+                }
+            });
         });
-    } else {
-        document.getElementById('editUserForm').submit();
-    }
-});
-
     </script>
 
 

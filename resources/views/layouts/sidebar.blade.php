@@ -10,7 +10,7 @@
                 </a>
             </li>
         @endif
-        @if (Auth::user()->roles->pluck('name')->intersect(['superadmin','prepared', 'viewer'])->isNotEmpty())
+        {{-- @if (Auth::user()->roles->pluck('name')->intersect(['superadmin','prepared', 'viewer'])->isNotEmpty()) --}}
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('approval.history', 'approval.history.id') ? 'active' : 'collapsed' }}"
                     href="{{ route('approval.history') }}">
@@ -18,7 +18,7 @@
                     <span>View Approval History</span>
                 </a>
             </li>
-        @endif
+        {{-- @endif --}}
         @if (Auth::user()->roles->pluck('name')->contains('superadmin'))
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('kategori.index') ? 'active' : 'collapsed' }}"
