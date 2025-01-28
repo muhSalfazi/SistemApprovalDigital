@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Login - Approval System</title>
+    <title>ValidasiQRcode - Approval System</title>
 
     <!-- Favicons -->
     <link href="{{ asset('assets/img/icon-kbi.png') }}" rel="icon">
@@ -40,10 +40,12 @@
                     </div>
 
                     <div class="d-flex justify-content-center mb-3">
-                        <button class="btn btn-outline-primary me-2" onclick="toggleMethod('scan')">
+                        <button class="btn btn-outline-primary btn-sm me-2"
+                            style="font-size: 0.775rem; padding: 3px 8px;" onclick="toggleMethod('scan')">
                             <i class="bi bi-qr-code-scan"></i> Scan QR Code
                         </button>
-                        <button class="btn btn-outline-secondary" onclick="toggleMethod('upload')">
+                        <button class="btn btn-outline-secondary btn-sm"style="font-size: 0.775rem; padding: 3px 8px;"
+                            onclick="toggleMethod('upload')">
                             <i class="bi bi-upload"></i> Upload Gambar
                         </button>
                     </div>
@@ -58,14 +60,12 @@
                             @csrf
                             <input type="text" name="qr_code" id="qrCodeInput" class="form-control text-center mt-2"
                                 placeholder="Hasil QR Code" required readonly>
-                            <button type="submit" class="btn btn-success w-100 mt-3">
+                            <button type="submit" class="btn btn-success w-100 mt-3 btn-sm" style="font-size: 0.875rem; padding: 3px 8px;">
                                 <i class="bi bi-qr-code-scan"></i> Validasi QR Code
                             </button>
                         </form>
                     </div>
 
-
-                    <!-- Upload Gambar QR Code -->
                     <!-- Upload Gambar QR Code -->
                     <div id="upload-method" class="d-none">
                         <h6 class="text-center text-secondary fw-bold">Upload Gambar QR Code</h6>
@@ -84,7 +84,7 @@
                                     alt="Thumbnail Preview" />
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 mt-3">
+                            <button type="submit" class="btn btn-primary w-100 mt-3 btn-sm"style="font-size: 0.875rem; padding: 3px 8px;">
                                 <i class="bi bi-upload"></i> Upload dan Validasi
                             </button>
                         </form>
@@ -92,7 +92,7 @@
 
 
                     <div class="text-center mt-3">
-                        <a href="{{ route('login') }}" class="btn btn-outline-secondary">
+                        <a href="{{ route('login') }}" class="btn btn-outline-secondary" style="font-size: 0.875rem; padding: 3px 8px;">
                             <i class="bi bi-arrow-left"></i> Kembali ke Login
                         </a>
                     </div>
@@ -173,8 +173,8 @@
             function getQrBoxSize() {
                 if (window.innerWidth < 768) {
                     return {
-                        width: 150,
-                        height: 150
+                        width: 160,
+                        height: 160
                     }; // Ukuran lebih kecil untuk mobile
                 }
                 return {
