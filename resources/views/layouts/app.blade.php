@@ -24,7 +24,9 @@
     <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/boxicons/css/boxicons.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('assets/vendor/simple-datatables/style.css') }}" rel="stylesheet">
+    {{-- <link href="{{ asset('assets/vendor/simple-datatables/style.css') }}" rel="stylesheet"> --}}
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet">
+
     <link href="{{ asset('assets/vendor/quill/quill.snow.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/quill/quill.bubble.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/remixicon/remixicon.css') }}" rel="stylesheet">
@@ -138,9 +140,10 @@
             font-size: 0.75rem;
             /* Ukuran font lebih kecil untuk layar kecil */
         }
+
         .table th {
-        font-size: 0.65rem;
-    }
+            font-size: 0.65rem;
+        }
 
         .table th,
         .table td {
@@ -497,6 +500,8 @@
     <!-- JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" defer></script>
+
 
     <script>
         function confirmDelete(userId) {
@@ -528,6 +533,13 @@
     {{-- sweet alert login sukses --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+    const tableElement = document.querySelector('.datatable');
+    if (tableElement) {
+        new simpleDatatables.DataTable(tableElement);
+    }
+});
+
         @if (session('login-sukses'))
             Swal.fire({
                 icon: 'success',
