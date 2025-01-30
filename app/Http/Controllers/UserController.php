@@ -198,9 +198,6 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
     }
 
-
-
-
     public function toggleStatus($id)
     {
         $user = User::findOrFail($id);
@@ -210,6 +207,35 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->back()->with('success', 'Status pengguna berhasil diperbarui.');
+    }
+    public function getRolesAndCategories(User $user)
+    {
+        return response()->json([
+            'roles' => $user->roles->map(function ($role) {
+                return ['id' => $role->id, 'name' => $role->name];
+            }),
+            'kategories' => $user->kategoris->map(function ($kategori) {
+                return ['id' => $kategori->id, 'nama_kategori' => $kategori->nama_kategori];
+            }),
+        ]);
+    }
+
+    public function deleteRoleOrKategori(Request $request, User $user)
+    {
+        $roleId = $request->role_id;
+        $kategoriId = $request->kategori_id;
+
+        if ($roleId) {
+            $user->roles()->detach($roleId);
+            return redirect()->route('users.index')->with('success', 'Role berhasil dihapus.');
+        }
+
+        if ($kategoriId) {
+            $user->kategoris()->detach($kategoriId);
+            return redirect()->route('users.index')->with('success', 'Kategori berhasil dihapus.');
+        }
+
+        return redirect()->route('users.index')->with('error', 'Tidak ada perubahan.');
     }
 
 

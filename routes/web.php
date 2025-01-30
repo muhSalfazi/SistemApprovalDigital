@@ -46,6 +46,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check-email');
     Route::get('users/{userId}/edit', [UserController::class, 'edit']);
     Route::put('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
+    Route::get('/users/{user}/roles-kategories', [UserController::class, 'getRolesAndCategories']);
+    Route::post('/users/{user}/delete-role-kategori', [UserController::class, 'deleteRoleOrKategori']);
+
 
 
 
