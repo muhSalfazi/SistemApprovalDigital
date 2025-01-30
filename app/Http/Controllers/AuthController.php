@@ -28,7 +28,7 @@ class AuthController extends Controller
         // Tentukan field berdasarkan input pengguna (hanya email atau ID-card)
         if (filter_var($request->loginIdentifier, FILTER_VALIDATE_EMAIL)) {
             $fieldType = 'email';
-        } elseif (is_numeric($request->loginIdentifier) && strlen($request->loginIdentifier) <= 8) {
+        } elseif (ctype_alnum($request->loginIdentifier) && strlen($request->loginIdentifier) <= 8) {
             $fieldType = 'IDcard';
         } else {
             return back()->withErrors(['loginIdentifier' => 'Gunakan email atau ID Card yang valid.'])->withInput();
@@ -110,7 +110,6 @@ class AuthController extends Controller
 
     if (!$user) {
         return redirect()->back()->with('error', 'RFID tidak terdaftar.');
-        // return redirect()->back()->withErrors(['RFID' => 'RFID tidak terdaftar.'])->withInput();
     }
 
     // Cek status akun, kecuali untuk superadmin

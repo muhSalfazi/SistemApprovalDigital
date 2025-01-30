@@ -220,22 +220,25 @@ class SubmissionController extends Controller
                         });
                 });
             })
-            ->when(!$isSuperAdmin && $roleNames->contains('approved'), function ($query) {
-                // Data untuk role 'approved', melihat semua departemen dan kategori, hanya jika sudah di-approve oleh Check2
-                $query->orWhere(function ($query) {
+            ->when(!$isSuperAdmin && $roleNames->contains('approved'), function ($query) use ($userDepartmentId, $userCategoryIds) {
+                // Data untuk role 'approved', hanya untuk departemen dan kategori tertentu
+                $query->orWhere(function ($query) use ($userDepartmentId, $userCategoryIds) {
                     $query->whereHas('approvals', function ($subQuery) {
                         $subQuery->where('status', 'approved')
                             ->whereHas('user.roles', function ($roleQuery) {
                                 $roleQuery->where('name', 'Check2');
                             });
                     })
-                        ->whereDoesntHave('approvals', function ($subQuery) {
-                            $subQuery->whereHas('user.roles', function ($roleQuery) {
-                                $roleQuery->where('name', 'approved');
-                            });
+                    ->where('id_departement', $userDepartmentId)
+                    ->whereIn('id_kategori', $userCategoryIds)
+                    ->whereDoesntHave('approvals', function ($subQuery) {
+                        $subQuery->whereHas('user.roles', function ($roleQuery) {
+                            $roleQuery->whereIn('name', ['approved']);
                         });
+                    });
                 });
             })
+
             ->when($isSuperAdmin, function ($query) {
                 // Jika superadmin, tampilkan semua data tanpa batasan departemen atau kategori
                 $query->orWhereNotNull('id');

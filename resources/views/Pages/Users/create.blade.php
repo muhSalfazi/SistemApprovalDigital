@@ -61,7 +61,8 @@
                         <small class="text-muted">*Default Password value id card</small>
                         <div class="input-group has-validation">
                             <input type="password" name="password"
-                                class="form-control @error('password') is-invalid @enderror" id="yourPassword" required>
+                                class="form-control @error('password') is-invalid @enderror" id="yourPassword" required
+                                readonly>
                             <button type="button" class="btn btn-outline-secondary" id="togglePassword">
                                 <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
                             </button>
@@ -73,7 +74,8 @@
 
                     <div class="col-md-4">
                         <label for="role" class="form-label">Role</label>
-                        <select name="role" id="role" class="form-select mb-3 @error('role') is-invalid @enderror" required>
+                        <select name="role" id="role" class="form-select mb-3 @error('role') is-invalid @enderror"
+                            required>
                             <option value="" disabled {{ old('role') ? '' : 'selected' }}>Pilih Role</option>
                             @foreach ($roles as $role)
                                 <option value="{{ $role->name }}" {{ old('role') == $role->name ? 'selected' : '' }}>
@@ -88,10 +90,12 @@
 
                     <div class="col-md-4">
                         <label for="kategori" class="form-label">Kategori</label>
-                        <select name="kategori_id" id="kategori_id" class="form-select mb-3 @error('kategori_id') is-invalid @enderror" required>
+                        <select name="kategori_id" id="kategori_id"
+                            class="form-select mb-3 @error('kategori_id') is-invalid @enderror" required>
                             <option value="" disabled selected>Pilih Kategori</option>
                             @foreach ($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('kategori_id') == $category->id ? 'selected' : '' }}>
+                                <option value="{{ $category->id }}"
+                                    {{ old('kategori_id') == $category->id ? 'selected' : '' }}>
                                     {{ $category->nama_kategori }} - {{ $category->alias_name }}
                                 </option>
                             @endforeach
@@ -110,13 +114,11 @@
                             <option value="FAS" {{ old('departement') == 'FAS' ? 'selected' : '' }}>FAS</option>
                             <option value="PPIC" {{ old('departement') == 'PPIC' ? 'selected' : '' }}>PPIC</option>
                         </select>
+
                         @error('departement')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <small class="text-danger">*Role "approved" dan "viewer" tidak perlu memilih
-                        departemen dan kategori</small>
-
 
                     <div class="col-6">
                         <button class="btn btn-primary" type="submit">Create User</button>
@@ -129,16 +131,16 @@
 
     {{-- js hidden+show PW --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const idCardInput = document.querySelector('input[name="ID-card"]');
             const passwordInput = document.getElementById('yourPassword');
 
-            idCardInput.addEventListener('input', function () {
+            idCardInput.addEventListener('input', function() {
                 passwordInput.value = idCardInput.value;
             });
 
             // Toggle Password Visibility
-            document.getElementById('togglePassword').addEventListener('click', function () {
+            document.getElementById('togglePassword').addEventListener('click', function() {
                 const passwordInput = document.getElementById('yourPassword');
                 const passwordIcon = document.getElementById('togglePasswordIcon');
 
@@ -153,47 +155,26 @@
                 }
             });
         });
-        </script>
+    </script>
 
     {{-- filter role --}}
     <script>
-       document.addEventListener('DOMContentLoaded', function() {
-    const emailInput = document.querySelector('input[name="email"]');
-    const roleSelect = document.getElementById('role');
-    const departmentSelect = document.getElementById('departement');
-    const categorySelect = document.getElementById('kategori_id');
-
-    // Fungsi untuk mengubah status dropdown Departemen dan Kategori
-    function updateFormFields(selectedRole = null) {
-        const role = selectedRole || roleSelect.value;
-
-        if (role === 'approved' || role === 'viewer') {
-            // Disable departemen dan kategori jika role adalah approved/viewer
-            departmentSelect.disabled = true;
-            departmentSelect.required = false;
-            departmentSelect.value = "";
-
-            categorySelect.disabled = true;
-            categorySelect.required = false;
-            categorySelect.value = "";
-        } else {
-            departmentSelect.disabled = false;
-            departmentSelect.required = true;
-            categorySelect.disabled = false;
-            categorySelect.required = true;
-        }
-    }
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.querySelector('input[name="email"]');
+            const roleSelect = document.getElementById('role');
+            const departmentSelect = document.getElementById('departement');
+            const categorySelect = document.getElementById('kategori_id');
 
 
-    // Jalankan saat halaman dimuat
-    updateFormFields();
 
-    // Event listener untuk perubahan pada role
-    roleSelect.addEventListener('change', function() {
-        updateFormFields();
-    });
-});
+            // Jalankan saat halaman dimuat
+            updateFormFields();
 
+            // Event listener untuk perubahan pada role
+            roleSelect.addEventListener('change', function() {
+                updateFormFields();
+            });
+        });
     </script>
 
 @endsection

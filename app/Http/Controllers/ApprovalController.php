@@ -8,44 +8,37 @@ use Illuminate\Http\Request;
 class ApprovalController extends Controller
 {
     public function index(Request $request)
-    {
-        $user = auth()->user();
-        $roleNames = $user->roles->pluck('name'); // Ambil semua role user sebagai koleksi
+{
+    $user = auth()->user();
+    $roleNames = $user->roles->pluck('name'); // Ambil semua role user
 
-        // Cek apakah user memiliki role superadmin
-        $isSuperAdmin = $roleNames->contains('superadmin');
+    // Cek apakah user memiliki role superadmin
+    $isSuperAdmin = $roleNames->contains('superadmin');
 
-        $submissions = Submission::with(['approvals.user.roles', 'user', 'departement'])
-            ->when(!$isSuperAdmin, function ($query) use ($user, $roleNames) {
-                $query->when($roleNames->contains('prepared'), function ($query) use ($user) {
-                    $query->where('id_user', $user->id); // Filter berdasarkan user logged-in
-                })
-                ->when($roleNames->contains('viewer'), function ($query) {
-                    $query->whereHas('approvals', function ($subQuery) {
-                        $subQuery->whereHas('user.roles', function ($roleQuery) {
-                            $roleQuery->where('name', 'approved'); // Pastikan submission telah disetujui
-                        })->where('status', 'approved'); // Status approval harus 'approved'
-                    });
-                })
-                ->whereHas('approvals', function ($query) use ($user) {
-                    $query->whereHas('user.roles', function ($roleQuery) {
-                        $roleQuery->whereIn('name', ['Check1', 'Check2']);
-                    })
-                    ->whereHas('user.departement', function ($depQuery) use ($user) {
-                        $depQuery->where('id_departement', $user->id_departement);  // Filter sesuai departemen user
-                    })
-                    ->whereHas('user.kategoris', function ($katQuery) use ($user) {
-                        $katQuery->whereIn('kategori_id', $user->kategoris->pluck('id')->toArray()); // Filter kategori user (many-to-many)
-                    })
-                    ->whereNotNull('approved_date'); // Hanya yang sudah diapprove
+    // Ambil ID departemen dan kategori pengguna
+    $userDepartmentId = $user->id_departement;
+    $userCategoryIds = $user->kategoris->pluck('id')->toArray();
+
+    // Query submissions
+    $submissions = Submission::with(['approvals.user.roles', 'user', 'departement'])
+        ->when(!$isSuperAdmin, function ($query) use ($user, $roleNames, $userDepartmentId, $userCategoryIds) {
+            $query->where(function ($query) use ($user, $roleNames, $userDepartmentId, $userCategoryIds) {
+                // Jika pengguna adalah "prepared", hanya tampilkan submission miliknya
+                if ($roleNames->contains('prepared')) {
+                    $query->orWhere('id_user', $user->id);
+                }
+
+                // Semua role selain superadmin melihat hanya yang sesuai dengan departemen dan kategori mereka
+                $query->orWhere(function ($q) use ($userDepartmentId, $userCategoryIds) {
+                    $q->where('id_departement', $userDepartmentId)
+                      ->whereIn('id_kategori', $userCategoryIds);
                 });
-            }) // Jika superadmin, semua data akan ditampilkan tanpa filter
-            ->get();
+            });
+        }) // Jika superadmin, semua data akan ditampilkan tanpa filter
+        ->get();
 
-        return view('Pages.Approval.historyapprove', compact('submissions', 'roleNames'));
-    }
-
-
+    return view('Pages.Approval.historyapprove', compact('submissions', 'roleNames'));
+}
 
 
     public function store(Request $request)
@@ -182,7 +175,7 @@ class ApprovalController extends Controller
             'canApprove' => $canApprove, // Apakah form harus ditampilkan
         ]);
     }
-    
+
     public function getApprovalTable($submissionId)
     {
         try {

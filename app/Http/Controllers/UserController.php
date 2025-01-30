@@ -61,24 +61,8 @@ class UserController extends Controller
             'email' => 'required|string|email|max:100|unique:tbl_users,email',
             'rfid' => 'required|string|max:20|unique:tbl_users,rfid',
             'role' => 'required|in:prepared,Check1,Check2,approved,viewer',
-            'kategori_id' => [
-                'nullable',
-                function ($attribute, $value, $fail) use ($request) {
-                    if (in_array($request->role, ['approved', 'viewer']) && $value !== null) {
-                        $fail('Kategori tidak diperlukan untuk peran ini.');
-                    }
-                },
-                'exists:tbl_kategori,id'
-            ],
-            'departement' => [
-                'nullable',
-                function ($attribute, $value, $fail) use ($request) {
-                    if (in_array($request->role, ['approved', 'viewer']) && $value !== null) {
-                        $fail('Departemen tidak diperlukan untuk peran ini.');
-                    }
-                },
-                'in:HRGA,FAS,PPIC'
-            ],
+            'kategori_id' =>'exists:tbl_kategori,id',
+            'departement' => 'in:HRGA,FAS,PPIC',
         ]);
 
         // Generate password based on ID Card securely
@@ -89,7 +73,7 @@ class UserController extends Controller
             'email' => $request->email,
             'IDcard' => $request->input('ID-card'),
             'RFID' => $request->rfid,
-            'id_departement' => $request->role == 'approved' || $request->role == 'viewer' ? null : $this->getDepartementID($request->departement),
+            'id_departement' => $this->getDepartementID($request->departement),
             'password' => $generatedPassword,
         ]);
 
