@@ -162,88 +162,88 @@ class SubmissionController extends Controller
 
     // Tampilkan daftar submission
     public function index()
-{
-    $user = auth()->user()->load('roles', 'kategoris'); // Load eager loading untuk kategori dari pivot
-    $roleNames = $user->roles->pluck('name');
+    {
+        $user = auth()->user()->load('roles', 'kategoris'); // Load eager loading untuk kategori dari pivot
+        $roleNames = $user->roles->pluck('name');
 
-    if ($roleNames->isEmpty()) {
-        abort(403, 'User does not have a role assigned.');
-    }
+        if ($roleNames->isEmpty()) {
+            abort(403, 'User does not have a role assigned.');
+        }
 
-    // Periksa apakah user adalah superadmin
-    $isSuperAdmin = $roleNames->contains('superadmin');
+        // Periksa apakah user adalah superadmin
+        $isSuperAdmin = $roleNames->contains('superadmin');
 
-    // Ambil ID departemen dan kategori pengguna dari relasi many-to-many
-    $userDepartmentId = $user->id_departement;
-    $userCategoryIds = $user->kategoris->pluck('id')->toArray();  // Mengambil semua kategori yang dimiliki user
+        // Ambil ID departemen dan kategori pengguna dari relasi many-to-many
+        $userDepartmentId = $user->id_departement;
+        $userCategoryIds = $user->kategoris->pluck('id')->toArray();  // Mengambil semua kategori yang dimiliki user
 
-    // Query untuk menyesuaikan semua role yang dimiliki
-    $submissions = Submission::with(['kategori', 'departement', 'user', 'approvals.user.roles'])
-        ->when(!$isSuperAdmin && $roleNames->contains('prepared'), function ($query) use ($user, $userCategoryIds) {
-            // Data untuk role 'prepared', hanya untuk submission yang dibuat oleh pengguna ini dan sesuai dengan departemen/kategori mereka
-            $query->where('id_user', $user->id)
-                ->where('id_departement', $user->id_departement)
-                ->whereIn('id_kategori', $userCategoryIds);
-        })
-        ->when(!$isSuperAdmin && $roleNames->contains('Check1'), function ($query) use ($userDepartmentId, $userCategoryIds) {
-            // Data untuk role 'Check1', hanya untuk departemen dan kategori tertentu
-            $query->orWhere(function ($query) use ($userDepartmentId, $userCategoryIds) {
-                $query->where(function ($query) {
-                    $query->whereDoesntHave('approvals', function ($subQuery) {
-                        $subQuery->whereHas('user.roles', function ($roleQuery) {
-                            $roleQuery->whereIn('name', ['Check1', 'Check2', 'approved']);
-                        });
+        // Query untuk menyesuaikan semua role yang dimiliki
+        $submissions = Submission::with(['kategori', 'departement', 'user', 'approvals.user.roles'])
+            ->when(!$isSuperAdmin && $roleNames->contains('prepared'), function ($query) use ($user, $userCategoryIds) {
+                // Data untuk role 'prepared', hanya untuk submission yang dibuat oleh pengguna ini dan sesuai dengan departemen/kategori mereka
+                $query->where('id_user', $user->id)
+                    ->where('id_departement', $user->id_departement)
+                    ->whereIn('id_kategori', $userCategoryIds);
+            })
+            ->when(!$isSuperAdmin && $roleNames->contains('Check1'), function ($query) use ($userDepartmentId, $userCategoryIds) {
+                // Data untuk role 'Check1', hanya untuk departemen dan kategori tertentu
+                $query->orWhere(function ($query) use ($userDepartmentId, $userCategoryIds) {
+                    $query->where(function ($query) {
+                        $query->whereDoesntHave('approvals', function ($subQuery) {
+                            $subQuery->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->whereIn('name', ['Check1', 'Check2', 'approved']);
+                            });
+                        })
+                            ->orWhereHas('approvals', function ($subQuery) {
+                                $subQuery->whereNull('status');
+                            });
                     })
-                    ->orWhereHas('approvals', function ($subQuery) {
-                        $subQuery->whereNull('status');
-                    });
-                })
-                ->where('id_departement', $userDepartmentId)
-                ->whereIn('id_kategori', $userCategoryIds);
-            });
-        })
-        ->when(!$isSuperAdmin && $roleNames->contains('Check2'), function ($query) use ($userDepartmentId, $userCategoryIds) {
-            // Data untuk role 'Check2', hanya untuk departemen dan kategori tertentu
-            $query->orWhere(function ($query) use ($userDepartmentId, $userCategoryIds) {
-                $query->whereHas('approvals', function ($subQuery) {
-                    $subQuery->where('status', 'approved')
-                        ->whereHas('user.roles', function ($roleQuery) {
-                            $roleQuery->where('name', 'Check1');
-                        });
-                })
-                ->where('id_departement', $userDepartmentId)
-                ->whereIn('id_kategori', $userCategoryIds)
-                ->whereDoesntHave('approvals', function ($subQuery) {
-                    $subQuery->whereHas('user.roles', function ($roleQuery) {
-                        $roleQuery->whereIn('name', ['Check2', 'approved']);
-                    });
+                        ->where('id_departement', $userDepartmentId)
+                        ->whereIn('id_kategori', $userCategoryIds);
                 });
-            });
-        })
-        ->when(!$isSuperAdmin && $roleNames->contains('approved'), function ($query) {
-            // Data untuk role 'approved', melihat semua departemen dan kategori, hanya jika sudah di-approve oleh Check2
-            $query->orWhere(function ($query) {
-                $query->whereHas('approvals', function ($subQuery) {
-                    $subQuery->where('status', 'approved')
-                        ->whereHas('user.roles', function ($roleQuery) {
-                            $roleQuery->where('name', 'Check2');
+            })
+            ->when(!$isSuperAdmin && $roleNames->contains('Check2'), function ($query) use ($userDepartmentId, $userCategoryIds) {
+                // Data untuk role 'Check2', hanya untuk departemen dan kategori tertentu
+                $query->orWhere(function ($query) use ($userDepartmentId, $userCategoryIds) {
+                    $query->whereHas('approvals', function ($subQuery) {
+                        $subQuery->where('status', 'approved')
+                            ->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->where('name', 'Check1');
+                            });
+                    })
+                        ->where('id_departement', $userDepartmentId)
+                        ->whereIn('id_kategori', $userCategoryIds)
+                        ->whereDoesntHave('approvals', function ($subQuery) {
+                            $subQuery->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->whereIn('name', ['Check2', 'approved']);
+                            });
                         });
-                })
-                ->whereDoesntHave('approvals', function ($subQuery) {
-                    $subQuery->whereHas('user.roles', function ($roleQuery) {
-                        $roleQuery->where('name', 'approved');
-                    });
                 });
-            });
-        })
-        ->when($isSuperAdmin, function ($query) {
-            // Jika superadmin, tampilkan semua data tanpa batasan departemen atau kategori
-            $query->orWhereNotNull('id');
-        })
-        ->get();
+            })
+            ->when(!$isSuperAdmin && $roleNames->contains('approved'), function ($query) {
+                // Data untuk role 'approved', melihat semua departemen dan kategori, hanya jika sudah di-approve oleh Check2
+                $query->orWhere(function ($query) {
+                    $query->whereHas('approvals', function ($subQuery) {
+                        $subQuery->where('status', 'approved')
+                            ->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->where('name', 'Check2');
+                            });
+                    })
+                        ->whereDoesntHave('approvals', function ($subQuery) {
+                            $subQuery->whereHas('user.roles', function ($roleQuery) {
+                                $roleQuery->where('name', 'approved');
+                            });
+                        });
+                });
+            })
+            ->when($isSuperAdmin, function ($query) {
+                // Jika superadmin, tampilkan semua data tanpa batasan departemen atau kategori
+                $query->orWhereNotNull('id');
+            })
+            ->get();
 
-    return view('Pages.Approval.index-approval', compact('submissions', 'roleNames'));
-}
+        return view('Pages.Approval.index-approval', compact('submissions', 'roleNames'));
+    }
 
     // Download file PDF
     public function downloadWithQRCode($id)

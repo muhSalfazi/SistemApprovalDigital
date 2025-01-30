@@ -128,7 +128,7 @@
         <!-- Informasi dokumen di pojok kanan atas -->
 
         <div class="header">
-            <img src="{{ asset('assets/img/kyoraku-baru.png') }}" alt="Company Logo" class="logo">
+            <img src="{{ public_path('assets/img/kyoraku-baru.png') }}" alt="Company Logo" class="logo">
             <h1>Approval QR Codes</h1>
             <p>Pindai untuk memverifikasi persetujuan dokumen</p>
         </div>
