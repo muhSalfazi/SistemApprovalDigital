@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('tbl_departement', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_departement', 50);  
+            $table->string('nama_departement', 50);
+            $table->softDeletes();
             $table->timestamps();
         });
     }
@@ -23,6 +24,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_departement');
+        Schema::table('tbl_departement', function (Blueprint $table) {
+            $table->dropSoftDeletes();
+        });
     }
 };

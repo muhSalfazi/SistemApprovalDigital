@@ -50,8 +50,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/users/{user}/delete-role-kategori', [UserController::class, 'deleteRoleOrKategori']);
 
 
-
-
     // kategori route
     Route::get('kategori', [KategoriController::class, 'index'])->name('kategori.index');
     Route::get('kategori/create', [KategoriController::class, 'create'])->name('kategori.create');
@@ -59,6 +57,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('kategori/{kategori}/edit', [KategoriController::class, 'edit'])->name('kategori.edit');
     Route::put('kategori/{kategori}', [KategoriController::class, 'update'])->name('kategori.update');
     Route::delete('kategori/{kategori}', [KategoriController::class, 'destroy'])->name('kategori.destroy');
+    Route::post('/kategori/toggle/{id}', [KategoriController::class, 'toggleStatus'])->name('kategori.toggle');
+
 
     // submission route
     Route::get('/approv', [SubmissionController::class, 'index'])->name('submissions.index');

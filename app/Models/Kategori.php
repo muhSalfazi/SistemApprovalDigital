@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  *
@@ -26,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Kategori extends Model
 {
-    use HasFactory;
+    use HasFactory,SoftDeletes;
 
     protected $table = 'tbl_kategori';
 
@@ -34,6 +35,8 @@ class Kategori extends Model
         'nama_kategori',
         'alias_name'
     ];
+    // buat softdelate di kategori
+    protected $dates = ['deleted_at'];
 
     public function submission()
     {

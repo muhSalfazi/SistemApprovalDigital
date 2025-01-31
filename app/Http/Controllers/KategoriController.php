@@ -10,7 +10,7 @@ class KategoriController extends Controller
 {
     public function index()
     {
-        $kategoris = Kategori::all();
+        $kategoris = Kategori::withTrashed()->get();
         return view('Pages.Kategori.index-kategori', compact('kategoris'));
     }
 
@@ -52,5 +52,33 @@ class KategoriController extends Controller
         $kategori->delete();
         return redirect()->route('kategori.index')->with('success', 'Kategori berhasil dihapus.');
     }
+
+    // status
+    public function toggleStatus($id)
+    {
+        $kategori = Kategori::withTrashed()->findOrFail($id);
+
+        if ($kategori->trashed()) {
+            // Jika kategori non-aktif (soft deleted), maka aktifkan kembali
+            $kategori->restore();
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori berhasil diaktifkan',
+                'status' => 'Aktif',
+                'deleted_at' => null
+            ]);
+        } else {
+            // Jika kategori aktif, maka soft delete (non-aktifkan)
+            $kategori->delete();
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori berhasil dinonaktifkan',
+                'status' => 'Nonaktif',
+                'deleted_at' => now()->format('d-m-Y H:i')
+            ]);
+        }
+    }
+
+
 }
 

@@ -26,19 +26,20 @@
         </div>
     @endif
     @if ($errors->any())
-    <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Validasi Gagal!',
-            html: `
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Validasi Gagal!',
+                html: `
                 <ul style="text-align: left;">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
             `,
-        });</script>
-@endif
+            });
+        </script>
+    @endif
 
     <section class="section">
         <div class="row">
@@ -59,6 +60,8 @@
                                         <th class="text-center">NO</th>
                                         <th class="text-center">Nama Kategori</th>
                                         <th class="text-center">Alias</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Waktu Nonaktif</th>
                                         <th class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -69,19 +72,32 @@
                                             <td class="text-center">{{ $kategori->nama_kategori }}</td>
                                             <td class="text-center">{{ $kategori->alias_name }}</td>
                                             <td class="text-center">
-                                                <!-- Tombol Edit -->
-                                                <button class="btn btn-primary btn-sm" style="font-size: 0.775rem; padding: 3px 8px;"
+                                                <div class="form-check form-switch d-flex align-items-center">
+                                                    <input class="form-check-input toggle-status text-center"
+                                                        type="checkbox" data-id="{{ $kategori->id }}"
+                                                        {{ is_null($kategori->deleted_at) ? 'checked' : '' }}>
+                                                    <span class="ms-2 status-text text-center">
+                                                        {{ is_null($kategori->deleted_at) ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                {{ $kategori->deleted_at ? \Carbon\Carbon::parse($kategori->deleted_at)->format('d-m-Y H:i') : '-' }}
+                                            </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-primary btn-sm"
+                                                    style="font-size: 0.775rem; padding: 3px 8px;"
                                                     onclick="editKategori({{ $kategori->id }})">
                                                     <i class="bi bi-pencil-square"></i> Edit
                                                 </button>
 
-                                                <!-- Tombol Delete -->
                                                 <form action="{{ route('kategori.destroy', $kategori) }}" method="POST"
                                                     id="delete-form-{{ $kategori->id }}" style="display:inline;">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button" onclick="confirmDelete({{ $kategori->id }})"
-                                                        class="btn btn-danger btn-sm " style="font-size: 0.775rem; padding: 3px 8px;">
+                                                        class="btn btn-danger btn-sm "
+                                                        style="font-size: 0.775rem; padding: 3px 8px;">
                                                         <i class="bi bi-trash3"></i> Delete
                                                     </button>
                                                 </form>
@@ -89,6 +105,7 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
+
                             </table>
                         </div>
                     </div>
@@ -98,7 +115,8 @@
     </section>
 
     <!-- Modal -->
-    <div class="modal fade animate__animated animate__fadeInDown" id="kategoriModal" tabindex="-1" aria-labelledby="kategoriModalLabel" aria-hidden="true">
+    <div class="modal fade animate__animated animate__fadeInDown" id="kategoriModal" tabindex="-1"
+        aria-labelledby="kategoriModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form id="kategoriForm" method="POST" action="{{ route('kategori.store') }}">
@@ -113,7 +131,7 @@
                         <div class="col-md-12 mb-3">
                             <label for="kategoriName" class="form-label">Nama Kategori</label>
                             <input type="text" name="nama_kategori" id="kategoriName" class="form-control"
-                                   value="{{ old('nama_kategori') }}" required>
+                                value="{{ old('nama_kategori') }}" required>
                             @error('nama_kategori')
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
@@ -121,7 +139,7 @@
                         <div class="col-md-12 mb-3">
                             <label for="alias_name" class="form-label">Alias Kategori</label>
                             <input type="text" name="alias_name" id="alias_name" class="form-control"
-                                   value="{{ old('alias_name') }}" required maxlength="4">
+                                value="{{ old('alias_name') }}" required maxlength="4">
                             @error('alias_name')
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
@@ -172,4 +190,91 @@
                 .catch(error => console.error('Error:', error));
         }
     </script>
+
+    {{-- js status kategori --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll('.toggle-status').forEach(function(toggle) {
+                toggle.addEventListener('change', function() {
+                    let kategoriId = this.getAttribute('data-id');
+                    let isChecked = this.checked;
+                    let actionText = isChecked ? 'mengaktifkan' : 'menonaktifkan';
+                    let statusText = isChecked ? 'Aktif' : 'Nonaktif';
+
+                    // Ambil elemen teks status
+                    let statusLabel = this.closest('td').querySelector('.status-text');
+                    let deleteTimeCell = this.closest('tr').querySelector(
+                        'td:nth-child(5)'); // Kolom waktu nonaktif
+
+                    // Konfirmasi SweetAlert
+                    Swal.fire({
+                        title: 'Konfirmasi Perubahan Status',
+                        text: `Apakah Anda yakin ingin ${actionText} kategori ini?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Lanjutkan',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(`{{ url('/kategori/toggle') }}/${kategoriId}`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Content-Type': 'application/json'
+                                    }
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Berhasil',
+                                            text: data.message
+                                        });
+
+                                        // Perbarui teks status
+                                        statusLabel.textContent = statusText;
+
+                                        // Perbarui waktu nonaktif jika dinonaktifkan
+                                        if (!isChecked) {
+                                            let now = new Date();
+                                            let formattedTime = now.toLocaleDateString(
+                                                    'id-ID') + ' ' + now
+                                                .toLocaleTimeString('id-ID');
+                                            deleteTimeCell.textContent = formattedTime;
+                                        } else {
+                                            deleteTimeCell.textContent = '-';
+                                        }
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Gagal',
+                                            text: 'Terjadi kesalahan!'
+                                        });
+                                        toggle.checked = !
+                                            isChecked; // Kembalikan toggle jika gagal
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'Terjadi kesalahan pada server!'
+                                    });
+                                    toggle.checked = !
+                                        isChecked; // Kembalikan toggle jika gagal
+                                });
+                        } else {
+                            toggle.checked = !isChecked; // Batalkan perubahan
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+
+    {{-- end js --}}
 @endsection

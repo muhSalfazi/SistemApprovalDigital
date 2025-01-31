@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_kategori', 50);
             $table->string('alias_name', 4);
+            $table->softDeletes();
             $table->timestamps();
         });
     }
@@ -24,6 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_kategori');
+        Schema::table('tbl_kategori', function (Blueprint $table) {
+            $table->dropSoftDeletes();
+        });
     }
 };
