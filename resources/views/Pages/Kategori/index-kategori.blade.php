@@ -82,12 +82,13 @@
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                {{ $kategori->deleted_at ? \Carbon\Carbon::parse($kategori->deleted_at)->format('d-m-Y H:i') : '-' }}
+                                                {{ $kategori->deleted_at ? \Carbon\Carbon::parse($kategori->deleted_at)->format('d M Y H:i:s') : '-' }}
                                             </td>
                                             <td class="text-center">
-                                                <button class="btn btn-primary btn-sm"
+                                                <button class="btn btn-primary btn-sm mb-1"
                                                     style="font-size: 0.775rem; padding: 3px 8px;"
-                                                    onclick="editKategori({{ $kategori->id }})">
+                                                    onclick="editKategori({{ $kategori->id }})"
+                                                    {{ $kategori->deleted_at ? 'disabled' : '' }}>
                                                     <i class="bi bi-pencil-square"></i> Edit
                                                 </button>
 
@@ -96,8 +97,9 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button" onclick="confirmDelete({{ $kategori->id }})"
-                                                        class="btn btn-danger btn-sm "
-                                                        style="font-size: 0.775rem; padding: 3px 8px;">
+                                                        class="btn btn-danger btn-sm mb-1"
+                                                        style="font-size: 0.775rem; padding: 3px 8px;"
+                                                        {{ $kategori->deleted_at ? 'disabled' : '' }}>
                                                         <i class="bi bi-trash3"></i> Delete
                                                     </button>
                                                 </form>
@@ -276,5 +278,37 @@
         });
     </script>
 
-    {{-- end js --}}
+    {{-- softdelete --}}
+    {{-- alert softdelete --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Tangani tombol Edit
+            document.querySelectorAll('.edit-btn').forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    if (this.hasAttribute('disabled')) {
+                        event.preventDefault();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Kategori Nonaktif',
+                            text: 'Aktifkan terlebih dahulu sebelum mengedit kategori ini!',
+                        });
+                    }
+                });
+            });
+
+            // Tangani tombol Delete
+            document.querySelectorAll('.delete-btn').forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    if (this.hasAttribute('disabled')) {
+                        event.preventDefault();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Kategori Nonaktif',
+                            text: 'Aktifkan terlebih dahulu sebelum menghapus Kategori ini!',
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

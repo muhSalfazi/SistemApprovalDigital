@@ -7,6 +7,7 @@ use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\QRCodeController;
+use App\Http\Controllers\DepartementController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -58,6 +59,15 @@ Route::middleware(['auth'])->group(function () {
     Route::put('kategori/{kategori}', [KategoriController::class, 'update'])->name('kategori.update');
     Route::delete('kategori/{kategori}', [KategoriController::class, 'destroy'])->name('kategori.destroy');
     Route::post('/kategori/toggle/{id}', [KategoriController::class, 'toggleStatus'])->name('kategori.toggle');
+
+    // departement route
+    Route::get('departement', [DepartementController::class, 'index'])->name('departement.index');
+    Route::get('departement/create', [DepartementController::class, 'create'])->name('departement.create');
+    Route::post('departement', [DepartementController::class, 'store'])->name('departement.store');
+    Route::get('departement/{departement}/edit', [DepartementController::class, 'edit'])->name('departement.edit');
+    Route::put('departement/{departement}', [DepartementController::class, 'update'])->name('departement.update');
+    Route::delete('departement/{departement}', [DepartementController::class, 'destroy'])->name('departement.destroy');
+    Route::post('/departement/toggle/{id}', [DepartementController::class, 'toggleStatus'])->name('departement.toggle');
 
 
     // submission route

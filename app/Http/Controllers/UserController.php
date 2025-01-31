@@ -10,13 +10,6 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    /**
-     * Get role ID from role name.
-     */
-    private function getDepartementID($departement_name)
-    {
-        return \App\Models\Departement::where('nama_departement', $departement_name)->value('id');
-    }
 
     /**
      * Display a listing of the resource.
@@ -45,10 +38,12 @@ class UserController extends Controller
     {
         $roles = Role::where('name', '!=', 'superadmin')->get();
         $users = User::with('roles')->get(); // Ambil semua user beserta role mereka
-        $categories = Kategori::all(); // Ambil semua kategori dari tabel kategori
+        $categories = Kategori::whereNull('deleted_at')->get();
+        $departements = \App\Models\Departement::whereNull('deleted_at')->get(); // Ambil hanya yang aktif
 
-        return view('Pages.Users.create', compact('roles', 'users', 'categories'));
+        return view('Pages.Users.create', compact('roles', 'users', 'categories', 'departements'));
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -62,7 +57,7 @@ class UserController extends Controller
             'rfid' => 'required|string|max:20|unique:tbl_users,rfid',
             'role' => 'required|in:prepared,Check1,Check2,approved,viewer',
             'kategori_id' =>'exists:tbl_kategori,id',
-            'departement' => 'in:HRGA,FAS,PPIC',
+            'departement' => 'required|exists:tbl_departement,id',
         ]);
 
         // Generate password based on ID Card securely
@@ -73,7 +68,7 @@ class UserController extends Controller
             'email' => $request->email,
             'IDcard' => $request->input('ID-card'),
             'RFID' => $request->rfid,
-            'id_departement' => $this->getDepartementID($request->departement),
+            'id_departement' => $request->departement, 
             'password' => $generatedPassword,
         ]);
 

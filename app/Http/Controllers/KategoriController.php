@@ -3,7 +3,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Kategori;
 use Illuminate\Http\Request;
-use RealRashid\SweetAlert\Facades\Alert;
 
 
 class KategoriController extends Controller
@@ -38,6 +37,10 @@ class KategoriController extends Controller
 
     public function update(Request $request, Kategori $kategori)
     {
+        if ($kategori->deleted_at !== null) {
+            return redirect()->route('kategori.index')->with('error', 'Kategori non-aktif tidak dapat diperbarui. Silakan aktifkan kembali terlebih dahulu.');
+        }
+        
         $request->validate([
             'nama_kategori' => 'required|string|max:50|unique:tbl_kategori,nama_kategori,' . $kategori->id,
             'alias_name' => 'required|string|max:4|unique:tbl_kategori,alias_name,' . $kategori->id,
@@ -49,7 +52,11 @@ class KategoriController extends Controller
 
     public function destroy(Kategori $kategori)
     {
-        $kategori->delete();
+         // Cek apakah departemen dalam keadaan non-aktif
+         if ($kategori->deleted_at !== null) {
+            return redirect()->route('kategori.index')->with('error', 'Kategori non-aktif tidak dapat diperbarui. Silakan aktifkan kembali terlebih dahulu.');
+        }
+        $kategori->forceDelete(); //delete permanen
         return redirect()->route('kategori.index')->with('success', 'Kategori berhasil dihapus.');
     }
 

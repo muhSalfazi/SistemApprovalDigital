@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Departement extends Model
 {
-    use HasFactory;
+    use HasFactory,SoftDeletes;
 
     protected $table = 'tbl_departement';
 
@@ -39,7 +39,7 @@ class Departement extends Model
     ];
 
     // buat softdelate di departement
-    protected $dates = ['deleted_at']; 
+    protected $dates = ['deleted_at'];
 
     public function user()
     {

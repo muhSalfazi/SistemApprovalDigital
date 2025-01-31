@@ -5,7 +5,7 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('submissions.index', 'submissions.create') ? 'active' : 'collapsed' }}"
                         href="{{ route('submissions.index') }}">
-                        <i class="fas fa-file-alt"></i>
+                        <i class="bi-file-earmark-text"></i>
                         <span>Submission</span>
                     </a>
                 </li>
@@ -13,15 +13,22 @@
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('approval.history', 'approval.history.id') ? 'active' : 'collapsed' }}"
                     href="{{ route('approval.history') }}">
-                    <i class="bi bi-clock-history"></i>
+                    <i class="bi-list-check""></i>
                     <span>View Approval History</span>
                 </a>
             </li>
             @if (Auth::user()->roles->pluck('name')->contains('superadmin'))
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('departement.index') ? 'active' : 'collapsed' }}"
+                        href="{{ route('departement.index') }}">
+                        <i class="bi-diagram-3"></i>
+                        <span>Departement</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('kategori.index') ? 'active' : 'collapsed' }}"
                         href="{{ route('kategori.index') }}">
-                        <i class="bi-folder"></i>
+                        <i class="bi-collection"></i>
                         <span>Kategori</span>
                     </a>
                 </li>

@@ -110,9 +110,12 @@
                         <select name="departement" id="departement"
                             class="form-select mb-3 @error('departement') is-invalid @enderror" required>
                             <option value="" disabled selected>Pilih Departemen</option>
-                            <option value="HRGA" {{ old('departement') == 'HRGA' ? 'selected' : '' }}>HRGA</option>
-                            <option value="FAS" {{ old('departement') == 'FAS' ? 'selected' : '' }}>FAS</option>
-                            <option value="PPIC" {{ old('departement') == 'PPIC' ? 'selected' : '' }}>PPIC</option>
+                            @foreach ($departements as $departement)
+                                <option value="{{ $departement->id }}"
+                                    {{ old('departement') == $departement->id ? 'selected' : '' }}>
+                                    {{ $departement->nama_departement }}
+                                </option>
+                            @endforeach
                         </select>
 
                         @error('departement')
