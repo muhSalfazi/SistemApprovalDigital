@@ -91,15 +91,16 @@
                     <div class="col-md-4">
                         <label for="kategori" class="form-label">Kategori</label>
                         <select name="kategori_id" id="kategori_id"
-                            class="form-select mb-3 @error('kategori_id') is-invalid @enderror" required>
-                            <option value="" disabled selected>Pilih Kategori</option>
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->id }}"
-                                    {{ old('kategori_id') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->nama_kategori }} - {{ $category->alias_name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        class="form-select select2 mb-3 @error('kategori_id') is-invalid @enderror" required>
+                        <option value="" disabled selected>Pilih Kategori</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}" {{ old('kategori_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->nama_kategori }} - {{ $category->alias_name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+
                         @error('kategori_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -179,5 +180,26 @@
             });
         });
     </script>
+
+<script>
+    $(document).ready(function() {
+        // Pastikan jQuery dan Select2 sudah dimuat
+        if (typeof $.fn.select2 !== "undefined") {
+            console.log("Select2 Loaded!");
+
+            // Inisialisasi Select2 dengan Search
+            $('#kategori_id').select2({
+                theme: 'bootstrap-5', // Tetap mengikuti tema Bootstrap
+                width: '100%', // Pastikan tetap full width
+                placeholder: "Pilih Kategori", // Placeholder di awal dropdown
+                allowClear: true // Tambahkan tombol hapus pilihan
+            });
+        } else {
+            console.error("Select2 is not loaded!");
+        }
+    });
+</script>
+
+
 
 @endsection

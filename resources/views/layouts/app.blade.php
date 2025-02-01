@@ -454,7 +454,9 @@
         }
     }
 </style>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+{{-- jsload --}}
 <script>
     // Hide loader after page load
     $(window).on('load', function() {
@@ -464,6 +466,14 @@
         }, 500); // Match this time with the CSS transition duration
     });
 </script>
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Select2 Bootstrap 5 Theme -->
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet">
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
 <body>
     {{-- jika ingin di hiden dulu sidebar nya class="toggle-sidebar" --}}
@@ -497,8 +507,7 @@
     <script src="{{ asset('assets/vendor/simple-datatables/simple-datatables.js') }}"></script>
     <!-- Template Main JS File -->
     <script src="{{ asset('assets/js/main.js') }}"></script>
-    <!-- JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" defer></script>
 
@@ -533,12 +542,12 @@
     {{-- sweet alert login sukses --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-    const tableElement = document.querySelector('.datatable');
-    if (tableElement) {
-        new simpleDatatables.DataTable(tableElement);
-    }
-});
+        document.addEventListener("DOMContentLoaded", function() {
+            const tableElement = document.querySelector('.datatable');
+            if (tableElement) {
+                new simpleDatatables.DataTable(tableElement);
+            }
+        });
 
         @if (session('login-sukses'))
             Swal.fire({
