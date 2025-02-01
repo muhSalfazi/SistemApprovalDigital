@@ -73,7 +73,7 @@
                                             adventure!</p>
                                     </div>
                                     <form class="row g-3 needs-validation" action="{{ route('postloginrfid') }}"
-                                        method="POST" novalidate>
+                                        method="POST" id="partNumberForm" novalidate>
                                         @csrf
                                         <div class="col-12">
                                             <label for="RFID" class="form-label">RFID</label>
@@ -232,34 +232,64 @@
         /* Responsif untuk tampilan mobile */
         @media (max-width: 576px) {
             .swal2-popup {
-                width: 320px !important; /* Untuk tampilan mobile */
+                width: 320px !important;
+                /* Untuk tampilan mobile */
             }
         }
     </style>
 
 
-    <script>
-        function submitForm() {
-            document.getElementById('partNumberForm').submit();
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const RFID = document.getElementById('RFID');
+        if (!RFID) {
+            console.error("RFID input field not found!");
+            return;
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const RFID = document.getElementById('RFID');
-            RFID.focus(); // Fokus pada input saat halaman dimuat
-            // Menjaga fokus tetap pada input meskipun mengklik di luar form
-            document.addEventListener('click', function(event) {
-                if (event.target !== RFID) {
-                    RFID.focus();
-                }
-            });
+        RFID.focus(); // Fokus ke input RFID
+
+        // buat fokus ke rfid
+        document.addEventListener('click', function(event) {
+            if (event.target !== RFID) {
+                RFID.focus();
+            }
         });
 
-        // Fungsi untuk memfokus kembali input jika form telah dikirim
+        // Auto-submit saat RFID scanner selesai input
+        RFID.addEventListener('input', function() {
+            if (RFID.value.length >= 5) { // minimal karakter
+                submitForm();
+            }
+        });
+
+        // Auto-submit jika ENTER ditekan
+        RFID.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                submitForm();
+            }
+        });
+
+        // Fokus kembali ke input jika user kembali ke halaman
         window.onfocus = function() {
-            const partNumberInput = document.getElementById('RFID');
             RFID.focus();
         };
-    </script>
+
+        function submitForm() {
+            console.log("Auto-submitting form...");
+            const form = document.getElementById('partNumberForm');
+
+            if (form) {
+                form.submit();
+            } else {
+                console.error("Form not found!");
+            }
+        }
+    });
+</script>
+
+
 
     {{-- refresh halaman --}}
     <script>
