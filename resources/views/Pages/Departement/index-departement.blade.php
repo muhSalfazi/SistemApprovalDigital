@@ -59,6 +59,7 @@
                                     <tr>
                                         <th class="text-center">NO</th>
                                         <th class="text-center">Nama Departement</th>
+                                        <th class="text-center">Deksripsi</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center">Waktu Nonaktif</th>
                                         <th class="text-center">Aksi</th>
@@ -69,6 +70,7 @@
                                         <tr>
                                             <td class="text-center">{{ $loop->iteration }}</td>
                                             <td class="text-center">{{ $departement->nama_departement }}</td>
+                                            <td class="text-center">{{ $departement->deksripsi ?? '-'}}</td>
                                             <td class="text-center">
                                                 <div class="form-check form-switch d-flex align-items-center">
                                                     <input type="checkbox" class="form-check-input toggle-status"
@@ -130,10 +132,18 @@
                     </div>
                     <div class="modal-body">
                         <div class="col-md-12 mb-3">
-                            <label for="departementName" class="form-label">Nama Departeme</label>
+                            <label for="departementName" class="form-label">Nama Departemen</label>
                             <input type="text" name="nama_departement" id="departementName" class="form-control"
-                                value="{{ old('nama_departement') }}" required maxlength="20">
+                                value="{{ old('nama_departement') }}" required maxlength="4" placeholder="max:4">
                             @error('nama_departement')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="departementDeksripsi" class="form-label">Deksripsi</label>
+                            <input type="text" name="deksripsi" id="departementDeksripsi" class="form-control"
+                                value="{{ old('deksripsi') }}" required  placeholder="-">
+                            @error('deksripsi')
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
@@ -174,6 +184,7 @@
                     // Setel metode ke PUT
                     document.getElementById('_method').value = "PUT";
                     document.getElementById('departementName').value = data.nama_departement;
+                    document.getElementById('departementDeksripsi').value = data.deksripsi;
 
                     // Tampilkan modal
                     const modal = new bootstrap.Modal(document.getElementById('departementModal'));
@@ -182,6 +193,8 @@
                 .catch(error => console.error('Error:', error));
         }
     </script>
+
+
     {{-- js status departement --}}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -266,8 +279,6 @@
             });
         });
     </script>
-
-
     {{-- alert softdelete --}}
     <script>
         document.addEventListener("DOMContentLoaded", function () {

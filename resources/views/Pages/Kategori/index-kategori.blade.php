@@ -59,7 +59,7 @@
                                     <tr>
                                         <th class="text-center">NO</th>
                                         <th class="text-center">Nama Kategori</th>
-                                        <th class="text-center">Alias</th>
+                                        <th class="text-center">Deksripsi</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center">Waktu Nonaktif</th>
                                         <th class="text-center">Aksi</th>
@@ -69,8 +69,8 @@
                                     @foreach ($kategoris as $kategori)
                                         <tr>
                                             <td class="text-center">{{ $loop->iteration }}</td>
-                                            <td class="text-center">{{ $kategori->nama_kategori }}</td>
                                             <td class="text-center">{{ $kategori->alias_name }}</td>
+                                            <td class="text-center">{{ $kategori->nama_kategori }}</td>
                                             <td class="text-center">
                                                 <div class="form-check form-switch d-flex align-items-center">
                                                     <input class="form-check-input toggle-status text-center"
@@ -131,18 +131,18 @@
                     </div>
                     <div class="modal-body">
                         <div class="col-md-12 mb-3">
-                            <label for="kategoriName" class="form-label">Nama Kategori</label>
-                            <input type="text" name="nama_kategori" id="kategoriName" class="form-control"
-                                value="{{ old('nama_kategori') }}" required>
-                            @error('nama_kategori')
+                            <label for="alias_name" class="form-label">Nama Kategori</label>
+                            <input type="text" name="alias_name" id="alias_name" class="form-control"
+                                value="{{ old('alias_name') }}" required maxlength="4" placeholder="max:4">
+                            @error('alias_name')
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-12 mb-3">
-                            <label for="alias_name" class="form-label">Alias Kategori</label>
-                            <input type="text" name="alias_name" id="alias_name" class="form-control"
-                                value="{{ old('alias_name') }}" required maxlength="4">
-                            @error('alias_name')
+                            <label for="kategoriName" class="form-label">Deksripsi</label>
+                            <input type="text" name="nama_kategori" id="kategoriName" class="form-control"
+                                value="{{ old('nama_kategori') }}" required>
+                            @error('nama_kategori')
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
@@ -281,10 +281,10 @@
     {{-- softdelete --}}
     {{-- alert softdelete --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             // Tangani tombol Edit
-            document.querySelectorAll('.edit-btn').forEach(function (button) {
-                button.addEventListener('click', function (event) {
+            document.querySelectorAll('.edit-btn').forEach(function(button) {
+                button.addEventListener('click', function(event) {
                     if (this.hasAttribute('disabled')) {
                         event.preventDefault();
                         Swal.fire({
@@ -297,8 +297,8 @@
             });
 
             // Tangani tombol Delete
-            document.querySelectorAll('.delete-btn').forEach(function (button) {
-                button.addEventListener('click', function (event) {
+            document.querySelectorAll('.delete-btn').forEach(function(button) {
+                button.addEventListener('click', function(event) {
                     if (this.hasAttribute('disabled')) {
                         event.preventDefault();
                         Swal.fire({

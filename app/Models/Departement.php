@@ -36,6 +36,7 @@ class Departement extends Model
     protected $fillable = [
         'id',
         'nama_departement',
+        'deksripsi'
     ];
 
     // buat softdelate di departement

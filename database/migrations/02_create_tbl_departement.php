@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('tbl_departement', function (Blueprint $table) {
             $table->id();
             $table->string('nama_departement', 50);
+            $table->string('deksripsi')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

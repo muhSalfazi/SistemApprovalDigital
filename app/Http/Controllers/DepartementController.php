@@ -17,7 +17,8 @@ class DepartementController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_departement' => 'required|string|max:20|unique:tbl_departement,nama_departement',
+            'nama_departement' => 'required|string|max:4|unique:tbl_departement,nama_departement',
+            'deksripsi' => 'required|string|unique:tbl_departement,deksripsi',
         ]);
 
         try {
@@ -44,6 +45,7 @@ class DepartementController extends Controller
         // Validasi input
         $request->validate([
             'nama_departement' => 'required|string|max:10|unique:tbl_departement,nama_departement,' . $departement->id,
+            'deksripsi' => 'required|string|unique:tbl_departement,deksripsi,' . $departement->id,
         ]);
 
         // Update departemen jika valid

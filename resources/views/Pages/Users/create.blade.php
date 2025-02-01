@@ -113,7 +113,7 @@
                             @foreach ($departements as $departement)
                                 <option value="{{ $departement->id }}"
                                     {{ old('departement') == $departement->id ? 'selected' : '' }}>
-                                    {{ $departement->nama_departement }}
+                                    {{ $departement->deksripsi ?? '-' }}|{{ $departement->nama_departement }}
                                 </option>
                             @endforeach
                         </select>
